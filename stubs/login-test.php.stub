@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Auth\{{MODEL_SHORT_NAME}};
+
+use {{MODEL_CLASS}};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class LoginTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_login_page_is_displayed(): void
+    {
+        $response = $this->get(route('{{MODEL_KEY}}.login.create'));
+
+        $response->assertSuccessful();
+    }
+
+    public function test_user_can_authenticate_using_email(): void
+    {
+        $user = {{MODEL_SHORT_NAME}}::factory()->create([
+            'email' => 'test@example.com',
+            'password' => 'password',
+        ]);
+
+        $response = $this->post(route('{{MODEL_KEY}}.login.store'), [
+            'email' => 'test@example.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_user_cannot_authenticate_with_invalid_password(): void
+    {
+        $user = {{MODEL_SHORT_NAME}}::factory()->create([
+            'email' => 'test@example.com',
+            'password' => 'password',
+        ]);
+
+        $response = $this->post(route('{{MODEL_KEY}}.login.store'), [
+            'email' => 'test@example.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
+    public function test_user_can_logout(): void
+    {
+        $user = {{MODEL_SHORT_NAME}}::factory()->create();
+
+        $this->actingAs($user);
+
+        $response = $this->post(route('{{MODEL_KEY}}.logout'));
+
+        $response->assertRedirect(route('{{MODEL_KEY}}.login.create'));
+        $this->assertGuest();
+    }
+}

@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Simtabi\Laranail\Auth\Events\UserLoggedIn;
+
+/**
+ * Issue an authenticated session for the given user.
+ */
+class IssueSession
+{
+    /**
+     * Create an authenticated session for the user.
+     */
+    public function handle(Request $request, Model $user): void
+    {
+        Auth::login($user);
+
+        $request->session()->regenerate();
+
+        event(new UserLoggedIn(
+            user: $user,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        ));
+    }
+}

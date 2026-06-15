@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Auth Routes for {{MODEL_SHORT_NAME}}
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['guest:{{MODEL_KEY}}'])->group(function (): void {
+    {{CONTROLLER_ROUTES}}
+});

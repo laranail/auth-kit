@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Simtabi\Laranail\Auth\Actions\AuthenticateCredentials;
+use Simtabi\Laranail\Auth\Actions\IssueSession;
+use {{NAMESPACE}}\LoginRequest;
+
+class LoginController extends Controller
+{
+    public function __construct(
+        protected AuthenticateCredentials $authenticate,
+        protected IssueSession $issueSession,
+    ) {
+    }
+
+    /**
+     * Show the login form.
+     */
+    public function create()
+    {
+        return view('auth.login');
+    }
+
+    /**
+     * Handle a login request.
+     */
+    public function store(LoginRequest $request)
+    {
+        $user = $this->authenticate->handle(
+            modelClass: $request->getAuthModel(),
+            login: $request->input($request->getLoginField()),
+            password: $request->input('password'),
+        );
+
+        $this->issueSession->handle(request: $request, user: $user);
+
+        return redirect()->intended('{{REDIRECT_AFTER_LOGIN}}');
+    }
+
+    /**
+     * Log the user out.
+     */
+    public function destroy(Request $request)
+    {
+        auth()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('{{MODEL_KEY}}.login.create');
+    }
+}

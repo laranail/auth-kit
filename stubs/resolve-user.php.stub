@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+use {{MODEL_CLASS}};
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Resolve a user by their login field.
+ */
+class ResolveUser
+{
+    /**
+     * Find a user by the given login value.
+     *
+     * @return Model|null
+     */
+    public function handle(string $login): ?Model
+    {
+        return {{MODEL_SHORT_NAME}}::resolveByLogin($login);
+    }
+}

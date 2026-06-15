@@ -1,0 +1,72 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laranail/auth-kit",
+    "type": "library",
+    "description": "A publish-first Laravel authentication scaffolding package supporting multiple authenticatable models.",
+    "keywords": ["laravel", "authentication", "scaffolding", "auth"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Simtabi",
+            "email": "hello@simtabi.com"
+        }
+    ],
+    "require": {
+        "php": "^8.4 | ^8.5",
+        "laravel/framework": "^13.0",
+        "laravel/prompts": "^0.2"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Simtabi\\Laranail\\Auth\\": "src/",
+            "Simtabi\\Laranail\\Auth\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Simtabi\\Laranail\\Auth\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Simtabi\\Laranail\\Auth\\AuthKitServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "format": [
+            "vendor/bin/pint --parallel"
+        ],
+        "test": [
+            "vendor/bin/pest --parallel"
+        ],
+        "analyse": [
+            "vendor/bin/phpstan analyse"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "archive": {
+        "exclude": [
+            "/tests",
+            "/.github",
+            "/.gitignore",
+            "phpunit.xml",
+            "pint.json"
+        ]
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

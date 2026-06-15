@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{NAMESPACE}};
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class LoginRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules for the request.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'email' => ['required', 'email', 'max:255'],
+            'password' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * Get the model class for the current route.
+     */
+    public function getAuthModel(): string
+    {
+        return config('auth-kit.models.{{MODEL_KEY}}.model', \App\Models\User::class);
+    }
+
+    /**
+     * Get the model key from the route name.
+     */
+    public function getModelKey(): string
+    {
+        return '{{MODEL_KEY}}';
+    }
+}
