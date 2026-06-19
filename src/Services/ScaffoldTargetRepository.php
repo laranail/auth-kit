@@ -17,6 +17,7 @@ final class ScaffoldTargetRepository
         'model_path',
         'factory_namespace',
         'factory_path',
+        'migration_path',
     ];
 
     private const REQUIRED_MODULE_KEYS = [
@@ -28,6 +29,7 @@ final class ScaffoldTargetRepository
         'model_path_pattern',
         'factory_namespace_pattern',
         'factory_path_pattern',
+        'migration_path_pattern',
     ];
 
     /**
@@ -35,9 +37,9 @@ final class ScaffoldTargetRepository
      */
     public function all(): array
     {
-        $targets = config('auth-kit.targets', []);
+        $targets = config(key: 'auth-kit.targets', default: []);
 
-        $this->validate($targets);
+        $this->validate(targets: $targets);
 
         return $targets;
     }
@@ -50,7 +52,7 @@ final class ScaffoldTargetRepository
         $targets = $this->all();
 
         if (! isset($targets[$key])) {
-            throw InvalidScaffoldConfigException::invalidTargetKey($key);
+            throw InvalidScaffoldConfigException::invalidTargetKey(key: $key);
         }
 
         return $targets[$key];
@@ -85,25 +87,25 @@ final class ScaffoldTargetRepository
             $type = $target['type'] ?? null;
 
             if ($type === null) {
-                throw InvalidScaffoldConfigException::missingRequiredKey($key, 'type');
+                throw InvalidScaffoldConfigException::missingRequiredKey(targetKey: $key, key: 'type');
             }
 
             $requiredKeys = $type === 'module' ? self::REQUIRED_MODULE_KEYS : self::REQUIRED_ROOT_KEYS;
 
             foreach ($requiredKeys as $requiredKey) {
-                if (! array_key_exists($requiredKey, $target)) {
-                    throw InvalidScaffoldConfigException::missingRequiredKey($key, $requiredKey);
+                if (! array_key_exists(key: $requiredKey, array: $target)) {
+                    throw InvalidScaffoldConfigException::missingRequiredKey(targetKey: $key, key: $requiredKey);
                 }
             }
 
             if ($type === 'module' && (isset($target['modules_root']) && $target['modules_root'] === '')) {
-                throw InvalidScaffoldConfigException::moduleTargetMissingModulesRoot($key);
+                throw InvalidScaffoldConfigException::moduleTargetMissingModulesRoot(key: $key);
             }
 
             $label = $target['label'] ?? '';
 
             if (isset($usedLabels[$label])) {
-                throw InvalidScaffoldConfigException::duplicateLabel($label, $usedLabels[$label], $key);
+                throw InvalidScaffoldConfigException::duplicateLabel(label: $label, keyA: $usedLabels[$label], keyB: $key);
             }
 
             $usedLabels[$label] = $key;

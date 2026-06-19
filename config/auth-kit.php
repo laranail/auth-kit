@@ -13,6 +13,7 @@ return [
             'model_path'        => 'app/Models',
             'factory_namespace' => 'Database\\Factories',
             'factory_path'      => 'database/factories',
+            'migration_path'    => 'database/migrations',
         ],
 
         'module_app_domain' => [
@@ -24,6 +25,7 @@ return [
             'model_path_pattern'        => '{module_path}/app/Models',
             'factory_namespace_pattern' => 'Modules\\{module}\\Database\\Factories',
             'factory_path_pattern'      => '{module_path}/database/factories',
+            'migration_path_pattern'    => '{module_path}/database/migrations',
         ],
 
         'module_src' => [
@@ -35,6 +37,7 @@ return [
             'model_path_pattern'        => '{module_path}/src/Models',
             'factory_namespace_pattern' => 'Modules\\{module}\\Database\\Factories',
             'factory_path_pattern'      => '{module_path}/database/factories',
+            'migration_path_pattern'    => '{module_path}/database/migrations',
         ],
     ],
 ];

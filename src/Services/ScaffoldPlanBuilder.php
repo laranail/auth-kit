@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Services;
 
+use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
 use Simtabi\Laranail\Auth\Dto\PlannedFile;
 use Simtabi\Laranail\Auth\Dto\ScaffoldPlan;
@@ -19,21 +20,22 @@ final class ScaffoldPlanBuilder
 
     public function buildForNewModel(ScaffoldTarget $target, string $modelClass): ScaffoldPlan
     {
-        $modelFile = $this->buildModelFile($target, $modelClass);
-        $factoryFile = $this->buildFactoryFile($target, $modelClass);
+        $modelFile = $this->buildModelFile(target: $target, modelClass: $modelClass);
+        $factoryFile = $this->buildFactoryFile(target: $target, modelClass: $modelClass);
+        $migrationFile = $this->buildMigrationFile(target: $target, modelClass: $modelClass);
 
         return new ScaffoldPlan(
             target: $target,
             modelClass: $modelClass,
             usingExistingModel: false,
-            files: [$modelFile, $factoryFile],
+            files: [$modelFile, $factoryFile, $migrationFile],
         );
     }
 
     public function buildForExistingModel(ScaffoldTarget $target, string $existingModelClass): ScaffoldPlan
     {
         $className = class_basename($existingModelClass);
-        $factoryFile = $this->buildFactoryFile($target, $className);
+        $factoryFile = $this->buildFactoryFile(target: $target, modelClass: $className);
 
         return new ScaffoldPlan(
             target: $target,
@@ -48,7 +50,7 @@ final class ScaffoldPlanBuilder
         $absolutePath = base_path($target->modelPath . '/' . $modelClass . '.php');
         $exists = $this->files->exists($absolutePath);
 
-        $contents = $this->stubRenderer->render('model.php.stub', [
+        $contents = $this->stubRenderer->render(stubName: 'model.php.stub', variables: [
             '{{ namespace }}' => $target->modelNamespace,
             '{{ class }}'     => $modelClass,
         ]);
@@ -68,7 +70,7 @@ final class ScaffoldPlanBuilder
         $absolutePath = base_path($target->factoryPath . '/' . $factoryClass . '.php');
         $exists = $this->files->exists($absolutePath);
 
-        $contents = $this->stubRenderer->render('factory.php.stub', [
+        $contents = $this->stubRenderer->render(stubName: 'factory.php.stub', variables: [
             '{{ namespace }}'       => $target->factoryNamespace,
             '{{ model_namespace }}' => $target->modelNamespace,
             '{{ model_class }}'     => $modelClass,
@@ -79,6 +81,27 @@ final class ScaffoldPlanBuilder
             path: $absolutePath,
             contents: $contents,
             description: $target->factoryPath . '/' . $factoryClass . '.php',
+            exists: $exists,
+            replace: $exists,
+        );
+    }
+
+    private function buildMigrationFile(ScaffoldTarget $target, string $modelClass): PlannedFile
+    {
+        $table = Str::snake(Str::pluralStudly($modelClass));
+        $filename = date('Y_m_d_His') . '_create_' . $table . '_table.php';
+        $relativePath = $target->migrationPath . '/' . $filename;
+        $absolutePath = base_path($relativePath);
+        $exists = $this->files->exists($absolutePath);
+
+        $contents = $this->stubRenderer->render(stubName: 'migration.php.stub', variables: [
+            '{{ table }}' => $table,
+        ]);
+
+        return new PlannedFile(
+            path: $absolutePath,
+            contents: $contents,
+            description: $relativePath,
             exists: $exists,
             replace: $exists,
         );
