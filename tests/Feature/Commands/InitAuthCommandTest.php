@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Laravel\Prompts\Prompt;
+use Laravel\Prompts\TextPrompt;
 use Laravel\Prompts\SelectPrompt;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -43,7 +44,7 @@ test(description: 'init auth command lets the user select an existing model', cl
         ->once()
         ->andReturn(['App\\Models\\User']);
 
-    $exitCode = new InitAuthCommand()->handle(getAvailableModels: $getAvailableModels);
+    $exitCode = app(InitAuthCommand::class)->handle(getAvailableModels: $getAvailableModels);
 
     expect(value: $exitCode)->toBe(expected: Command::SUCCESS)
         ->and(value: $output->fetch())->toContain('This command help you scaffold an authentication.')
@@ -71,8 +72,63 @@ test(description: 'init auth command fails when no existing models are available
         ->once()
         ->andReturn([]);
 
-    $exitCode = new InitAuthCommand()->handle(getAvailableModels: $getAvailableModels);
+    $exitCode = app(InitAuthCommand::class)->handle(getAvailableModels: $getAvailableModels);
 
     expect(value: $exitCode)->toBe(expected: Command::FAILURE)
         ->and(value: $output->fetch())->toContain('No models found in Models or models directory.');
+});
+
+test(description: 'init auth command creates a new model from path', closure: function () {
+    $output = new BufferedOutput();
+    $selections = [
+        AuthScaffoldOption::CREATE_NEW_MODEL->value,
+    ];
+    $textInputs = [
+        'workbench/app/Models/Admin',
+        'Workbench\\App\\Models',
+    ];
+    $prompts = [];
+
+    Prompt::setOutput(output: $output);
+    Prompt::fallbackWhen(condition: true);
+
+    SelectPrompt::fallbackUsing(fallback: function (SelectPrompt $prompt) use (&$selections): string {
+        return array_shift(array: $selections);
+    });
+
+    TextPrompt::fallbackUsing(fallback: function (TextPrompt $prompt) use (&$textInputs, &$prompts): string {
+        $prompts[] = [
+            'label'   => $prompt->label,
+            'default' => $prompt->default,
+        ];
+
+        return array_shift(array: $textInputs);
+    });
+
+    $getAvailableModels = Mockery::mock(GetAvailableModels::class);
+    $getAvailableModels->shouldNotReceive('__invoke');
+
+    $exitCode = app(InitAuthCommand::class)->handle(getAvailableModels: $getAvailableModels);
+
+    expect(value: $exitCode)->toBe(expected: Command::SUCCESS)
+        ->and(value: $output->fetch())->toContain('Model created at workbench/app/Models/Admin.php')
+        ->and(value: $prompts)->toBe(expected: [
+            [
+                'label'   => 'Enter the model path (e.g., app/Models/User)',
+                'default' => '',
+            ],
+            [
+                'label'   => 'Confirm the model namespace',
+                'default' => 'Workbench\\App\\Models',
+            ],
+        ]);
+
+    $createdFile = base_path('workbench/app/Models/Admin.php');
+    expect(value: $createdFile)->toBeFile();
+
+    $content = file_get_contents($createdFile);
+    expect(value: $content)->toContain('namespace Workbench\\App\\Models;')
+        ->and(value: $content)->toContain('class Admin extends Authenticatable');
+
+    unlink($createdFile);
 });
