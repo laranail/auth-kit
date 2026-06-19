@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 
 class {{ class }} extends Authenticatable
 {
-    /** @use HasFactory<\{{ namespace }}\Factories\{{ class }}Factory> */
+    /** @use HasFactory<\{{ factory_namespace }}\{{ class }}Factory> */
     use HasFactory;
     use Notifiable;
 

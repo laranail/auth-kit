@@ -73,8 +73,8 @@ class InitAuthCommand extends Command
             $modelStub = $this->resolveStub(name: 'model.php.stub');
 
             $modelContent = str_replace(
-                search: ['{{ namespace }}', '{{ class }}'],
-                replace: [$namespace, $className],
+                search: ['{{ namespace }}', '{{ class }}', '{{ factory_namespace }}'],
+                replace: [$namespace, $className, $this->getFactoryNamespace($namespace)],
                 subject: $modelStub,
             );
 

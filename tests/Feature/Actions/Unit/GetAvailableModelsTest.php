@@ -7,7 +7,7 @@ use Simtabi\Laranail\Auth\Actions\GetAvailableModels;
 
 it(description: 'returns php classes from configured model paths', closure: function () {
     $files = new Filesystem();
-    $basePath = sys_get_temp_dir() . '/auth-kit-models-' . bin2hex(string: random_bytes(length: 8));
+    $basePath = base_path(path: 'workbench/auth-kit-models-' . bin2hex(string: random_bytes(length: 8)));
 
     $originalBasePath = app()->basePath();
     app()->setBasePath($basePath);

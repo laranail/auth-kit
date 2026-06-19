@@ -84,6 +84,8 @@ test(description: 'init auth command creates a new model from path', closure: fu
     $modelFile = base_path(path: 'workbench/app/Models/Admin.php');
     $factoryFile = base_path(path: 'database/factories/AdminFactory.php');
 
+    $files->ensureDirectoryExists(path: dirname(path: $modelFile));
+
     @unlink(filename: $modelFile);
     @unlink(filename: $factoryFile);
 
@@ -124,11 +126,11 @@ test(description: 'init auth command creates a new model from path', closure: fu
         ->and(value: $outputContent)->toContain('Factory created at database/factories/AdminFactory.php')
         ->and(value: $prompts)->toBe(expected: [
             [
-                'label' => 'Enter the model path (e.g., app/Models/User)',
+                'label'   => 'Enter the model path (e.g., app/Models/User)',
                 'default' => '',
             ],
             [
-                'label' => 'Confirm the model namespace',
+                'label'   => 'Confirm the model namespace',
                 'default' => 'Workbench\\App\\Models',
             ],
         ])
