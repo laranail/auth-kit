@@ -27,9 +27,6 @@ class InstallCommand extends Command
         parent::__construct();
     }
 
-    /**
-     * Execute the install command.
-     */
     public function handle(): int
     {
         info(message: 'Auth Kit - Authentication Scaffolding');
@@ -63,15 +60,8 @@ class InstallCommand extends Command
             hint: 'This will be used as the URL prefix for auth routes.'
         );
 
-        // Step 4: Select redirect path after login
-        $redirectAfterLogin = text(
-            label: 'Redirect path after login',
-            placeholder: '/',
-            default: '/',
-            hint: 'The user will be redirected here after successful login.'
-        );
-
-        // Step 5: Show summary
+        // Step 4: Show summary
+        $redirectAfterLogin = '/';
         table(
             headers: ['Setting', 'Value'],
             rows: [
@@ -88,7 +78,7 @@ class InstallCommand extends Command
             return self::SUCCESS;
         }
 
-        // Step 6: Publish files
+        // Step 5: Publish files
         $config = [
             'model_class'          => $modelClass,
             'model_short_name'     => $modelShortName,
@@ -107,7 +97,7 @@ class InstallCommand extends Command
         $this->publishModelConcern(config: $config);
         $this->publishTests(config: $config);
 
-        // Step 7: Show next steps
+        // Step 6: Show next steps
         info(message: 'Installation complete!');
         $this->newLine();
         $this->line(string: 'Next steps:');
