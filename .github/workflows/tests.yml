@@ -38,9 +38,6 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
-      - name: Configure Github repository
-        run: composer config github-oauth.github.com "${{ secrets.GIT_PAT_LARANAIL_COMPOSER }}"
-
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
