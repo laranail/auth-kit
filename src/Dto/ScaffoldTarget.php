@@ -18,6 +18,7 @@ final readonly class ScaffoldTarget
         public string $modelNamespace,
         public string $factoryPath,
         public string $factoryNamespace,
+        public string $migrationPath,
     ) {
     }
 }

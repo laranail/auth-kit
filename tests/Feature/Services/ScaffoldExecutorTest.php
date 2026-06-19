@@ -21,6 +21,7 @@ test(description: 'scaffold executor creates missing directories and writes file
         modelNamespace: 'App\\Models',
         factoryPath: 'database/factories',
         factoryNamespace: 'Database\\Factories',
+        migrationPath: 'database/migrations',
     );
 
     $plan = new ScaffoldPlan(

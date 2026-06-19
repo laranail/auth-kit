@@ -21,10 +21,10 @@ final class ScaffoldTargetResolver
         $config = $this->repository->find($key);
 
         if ($config['type'] === 'module') {
-            return $this->resolveModuleTarget($key, $config, $moduleName);
+            return $this->resolveModuleTarget(key: $key, config: $config, moduleName: $moduleName);
         }
 
-        return $this->resolveRootTarget($key, $config);
+        return $this->resolveRootTarget(key: $key, config: $config);
     }
 
     /**
@@ -44,6 +44,7 @@ final class ScaffoldTargetResolver
             modelNamespace: $config['model_namespace'],
             factoryPath: $config['factory_path'],
             factoryNamespace: $config['factory_namespace'],
+            migrationPath: $config['migration_path'],
         );
     }
 
@@ -57,9 +58,9 @@ final class ScaffoldTargetResolver
         }
 
         $modules = $this->discoverModules->all($config['modules_root']);
-        $moduleNames = array_column($modules, 'name');
+        $moduleNames = array_column(array: $modules, column_key: 'name');
 
-        if (! in_array($moduleName, $moduleNames, true)) {
+        if (! in_array(needle: $moduleName, haystack: $moduleNames, strict: true)) {
             throw new InvalidArgumentException(
                 "Module [{$moduleName}] not found in [{$config['modules_root']}/]."
             );
@@ -77,24 +78,29 @@ final class ScaffoldTargetResolver
             basePath: $modulePath,
             sourcePath: $modulePath . '/' . $config['source_path'],
             modelPath: str_replace(
-                ['{module}', '{module_path}'],
-                [$studlyModule, $modulePath],
-                $config['model_path_pattern'],
+                search: ['{module}', '{module_path}'],
+                replace: [$studlyModule, $modulePath],
+                subject: $config['model_path_pattern'],
             ),
             modelNamespace: str_replace(
-                ['{module}', '{module_path}'],
-                [$studlyModule, $modulePath],
-                $config['model_namespace_pattern'],
+                search: ['{module}', '{module_path}'],
+                replace: [$studlyModule, $modulePath],
+                subject: $config['model_namespace_pattern'],
             ),
             factoryPath: str_replace(
-                ['{module}', '{module_path}'],
-                [$studlyModule, $modulePath],
-                $config['factory_path_pattern'],
+                search: ['{module}', '{module_path}'],
+                replace: [$studlyModule, $modulePath],
+                subject: $config['factory_path_pattern'],
             ),
             factoryNamespace: str_replace(
-                ['{module}', '{module_path}'],
-                [$studlyModule, $modulePath],
-                $config['factory_namespace_pattern'],
+                search: ['{module}', '{module_path}'],
+                replace: [$studlyModule, $modulePath],
+                subject: $config['factory_namespace_pattern'],
+            ),
+            migrationPath: str_replace(
+                search: ['{module}', '{module_path}'],
+                replace: [$studlyModule, $modulePath],
+                subject: $config['migration_path_pattern'],
             ),
         );
     }

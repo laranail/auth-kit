@@ -18,7 +18,8 @@ test(description: 'scaffold target resolver resolves root target correctly', clo
         ->and(value: $target->type)->toBe(expected: 'root')
         ->and(value: $target->moduleName)->toBeNull()
         ->and(value: $target->modelNamespace)->toBe(expected: 'App\\Models')
-        ->and(value: $target->factoryNamespace)->toBe(expected: 'Database\\Factories');
+        ->and(value: $target->factoryNamespace)->toBe(expected: 'Database\\Factories')
+        ->and(value: $target->migrationPath)->toBe(expected: 'database/migrations');
 });
 
 test(description: 'scaffold target resolver throws for invalid key', closure: function () {

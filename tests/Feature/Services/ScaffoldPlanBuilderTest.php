@@ -21,6 +21,7 @@ test(description: 'scaffold plan builder builds plan for new model', closure: fu
         modelNamespace: 'App\\Models',
         factoryPath: 'database/factories',
         factoryNamespace: 'Database\\Factories',
+        migrationPath: 'database/migrations',
     );
 
     $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
@@ -29,7 +30,7 @@ test(description: 'scaffold plan builder builds plan for new model', closure: fu
     expect(value: $plan)->toBeInstanceOf(ScaffoldPlan::class)
         ->and(value: $plan->modelClass)->toBe(expected: 'Admin')
         ->and(value: $plan->usingExistingModel)->toBeFalse()
-        ->and(value: $plan->files)->toHaveCount(2);
+        ->and(value: $plan->files)->toHaveCount(3);
 
     $modelFile = $plan->files[0];
     expect(value: $modelFile->description)->toBe(expected: 'app/Models/Admin.php')
@@ -41,6 +42,12 @@ test(description: 'scaffold plan builder builds plan for new model', closure: fu
         ->and(value: $factoryFile->contents)->toContain('namespace Database\\Factories;')
         ->and(value: $factoryFile->contents)->toContain('class AdminFactory extends Factory')
         ->and(value: $factoryFile->contents)->toContain('use App\\Models\\Admin;');
+
+    $migrationFile = $plan->files[2];
+    expect(value: $migrationFile->description)->toContain('database/migrations/')
+        ->and(value: $migrationFile->description)->toContain('create_admins_table.php')
+        ->and(value: $migrationFile->contents)->toContain("Schema::create('admins'")
+        ->and(value: $migrationFile->contents)->toContain("Schema::dropIfExists('admins')");
 });
 
 test(description: 'scaffold plan builder builds plan for existing model', closure: function () {
@@ -56,6 +63,7 @@ test(description: 'scaffold plan builder builds plan for existing model', closur
         modelNamespace: 'App\\Models',
         factoryPath: 'database/factories',
         factoryNamespace: 'Database\\Factories',
+        migrationPath: 'database/migrations',
     );
 
     $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
@@ -84,6 +92,7 @@ test(description: 'scaffold plan builder marks existing files as replace', closu
         modelNamespace: 'Workbench\\App\\Models',
         factoryPath: 'workbench/database/factories',
         factoryNamespace: 'Workbench\\Database\\Factories',
+        migrationPath: 'workbench/database/migrations',
     );
 
     $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
@@ -92,4 +101,28 @@ test(description: 'scaffold plan builder marks existing files as replace', closu
     $modelFile = $plan->files[0];
     expect(value: $modelFile->exists)->toBeFalse()
         ->and(value: $modelFile->replace)->toBeFalse();
+});
+
+test(description: 'scaffold plan builder derives table name from model class', closure: function () {
+    $target = new ScaffoldTarget(
+        key: 'root',
+        label: 'Root application',
+        type: 'root',
+        moduleName: null,
+        modulePath: null,
+        basePath: '',
+        sourcePath: 'app',
+        modelPath: 'app/Models',
+        modelNamespace: 'App\\Models',
+        factoryPath: 'database/factories',
+        factoryNamespace: 'Database\\Factories',
+        migrationPath: 'database/migrations',
+    );
+
+    $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
+    $plan = $builder->buildForNewModel($target, 'AdminUser');
+
+    $migrationFile = $plan->files[2];
+    expect(value: $migrationFile->description)->toContain('create_admin_users_table.php')
+        ->and(value: $migrationFile->contents)->toContain("Schema::create('admin_users'");
 });

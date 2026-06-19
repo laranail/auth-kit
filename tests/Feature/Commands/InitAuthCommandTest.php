@@ -68,6 +68,7 @@ test(description: 'init auth command creates a new model for root target', closu
         ->and(value: $outputContent)->toContain('This command help you scaffold an authentication.')
         ->and(value: $outputContent)->toContain('Created app/Models/Admin.php')
         ->and(value: $outputContent)->toContain('Created database/factories/AdminFactory.php')
+        ->and(value: $outputContent)->toContain('create_admins_table.php')
         ->and(value: $prompts)->toBe(expected: [
             [
                 'label'   => 'Where would you like to scaffold?',
@@ -92,6 +93,11 @@ test(description: 'init auth command creates a new model for root target', closu
 
     @unlink(filename: $modelFile);
     @unlink(filename: $factoryFile);
+
+    $migrationFiles = glob(pattern: base_path(path: 'database/migrations/*_create_admins_table.php'));
+    foreach ($migrationFiles as $migrationFile) {
+        @unlink(filename: $migrationFile);
+    }
 });
 
 test(description: 'init auth command replaces existing model for root target', closure: function () {
@@ -137,6 +143,11 @@ test(description: 'init auth command replaces existing model for root target', c
 
     @unlink(filename: $modelPath);
     @unlink(filename: $factoryPath);
+
+    $migrationFiles = glob(pattern: base_path(path: 'database/migrations/*_create_replaceables_table.php'));
+    foreach ($migrationFiles as $migrationFile) {
+        @unlink(filename: $migrationFile);
+    }
 });
 
 test(description: 'init auth command fails when no modules found for module target', closure: function () {
@@ -196,11 +207,18 @@ test(description: 'init auth command scaffolds for module target', closure: func
     expect(value: $exitCode)->toBe(expected: Command::SUCCESS)
         ->and(value: $outputContent)->toContain('Done!')
         ->and(value: $outputContent)->toContain('Created modules/CRM/app/Models/Customer.php')
-        ->and(value: $outputContent)->toContain('Created modules/CRM/database/factories/CustomerFactory.php');
+        ->and(value: $outputContent)->toContain('Created modules/CRM/database/factories/CustomerFactory.php')
+        ->and(value: $outputContent)->toContain('create_customers_table.php');
 
     @unlink(filename: base_path(path: 'modules/CRM/app/Models/Customer.php'));
     @unlink(filename: base_path(path: 'modules/CRM/database/factories/CustomerFactory.php'));
     @rmdir(base_path(path: 'modules/CRM/database/factories'));
+
+    $migrationFiles = glob(pattern: base_path(path: 'modules/CRM/database/migrations/*_create_customers_table.php'));
+    foreach ($migrationFiles as $migrationFile) {
+        @unlink(filename: $migrationFile);
+    }
+    @rmdir(base_path(path: 'modules/CRM/database/migrations'));
     @rmdir(base_path(path: 'modules/CRM/database'));
     @rmdir(base_path(path: 'modules/CRM/app/Models'));
     @rmdir(base_path(path: 'modules/CRM/app'));
