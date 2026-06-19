@@ -33,17 +33,19 @@ class AuthKitServiceProvider extends ServiceProvider
      */
     private function registerPublishing(): void
     {
-        if (! $this->app->runningInConsole()) {
+        if (!$this->app->runningInConsole()) {
             return;
         }
 
-        $this->publishes([
-            __DIR__ . '/../config/auth-kit.php' => config_path('auth-kit.php'),
-        ], 'auth-kit-config');
+        $this->publishes(
+            paths: [__DIR__ . '/../config/auth-kit.php' => config_path(path: 'auth-kit.php'),],
+            groups: 'auth-kit-config'
+        );
 
-        $this->publishes([
-            __DIR__ . '/../stubs/' => base_path('auth-kit-stubs'),
-        ], 'auth-kit-stubs');
+        $this->publishes(
+            paths: [__DIR__ . '/../stubs/' => base_path(path: 'auth-kit-stubs'),],
+            groups: 'auth-kit-stubs'
+        );
     }
 
     /**
@@ -51,7 +53,7 @@ class AuthKitServiceProvider extends ServiceProvider
      */
     private function registerCommands(): void
     {
-        $this->commands([
+        $this->commands(commands: [
             \Simtabi\Laranail\Auth\Commands\InitAuthCommand::class,
         ]);
     }
