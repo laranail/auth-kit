@@ -28,7 +28,7 @@ uses(TestCase::class, \Illuminate\Foundation\Testing\LazilyRefreshDatabase::clas
 |
 */
 
-expect()->extend('toBeOne', function () {
+expect()->extend(name: 'toBeOne', extend: function () {
     return $this->toBe(1);
 });
 

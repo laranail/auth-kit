@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth;
 
 use Illuminate\Support\ServiceProvider;
-use Simtabi\Laranail\Auth\Commands\InstallCommand;
 
 class AuthKitServiceProvider extends ServiceProvider
 {
@@ -53,7 +52,7 @@ class AuthKitServiceProvider extends ServiceProvider
     private function registerCommands(): void
     {
         $this->commands([
-            InstallCommand::class,
+            \Simtabi\Laranail\Auth\Commands\InitAuthCommand::class,
         ]);
     }
 }
