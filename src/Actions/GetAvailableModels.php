@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Actions;
 
 use SplFileInfo;
+use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
 
 class GetAvailableModels
@@ -17,21 +18,17 @@ class GetAvailableModels
     /**
      * @return list<string>
      */
-    public function __invoke(?string $basePath = null): array
+    public function __invoke(): array
     {
-        $basePath ??= app_path();
-
         $models = [];
 
-        foreach (['Models', 'models'] as $directory) {
-            $path = $basePath . DIRECTORY_SEPARATOR . $directory;
-
-            if (! $this->files->isDirectory($path)) {
+        foreach ($this->resolveModelPaths() as $path) {
+            if (! $this->files->isDirectory(directory: $path)) {
                 continue;
             }
 
-            foreach ($this->files->allFiles($path) as $file) {
-                $class = $this->extractClassName($file);
+            foreach ($this->files->allFiles(directory: $path) as $file) {
+                $class = $this->extractClassName(file: $file);
 
                 if ($class !== null) {
                     $models[] = $class;
@@ -39,9 +36,68 @@ class GetAvailableModels
             }
         }
 
-        sort($models);
+        sort(array: $models);
 
-        return array_values(array_unique($models));
+        return array_values(array: array_unique(array: $models));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function resolveModelPaths(): array
+    {
+        $paths = config(key: 'auth-kit.models_paths', default: []);
+        $resolvedPaths = [];
+
+        foreach ($paths as $path) {
+            foreach ($this->expandPathPattern(pattern: $path) as $expandedPath) {
+                $resolvedPaths[] = base_path(path: $expandedPath);
+            }
+        }
+
+        return array_values(array: array_unique(array: $resolvedPaths));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function expandPathPattern(string $pattern): array
+    {
+        $paths = [$pattern];
+
+        if (Str::contains(haystack: $pattern, needles: '{') && Str::contains(haystack: $pattern, needles: '}')) {
+            preg_match(pattern: '/\{([^}]+)}/', subject: $pattern, matches: $matches);
+
+            if ($matches !== []) {
+                $paths = [];
+
+                foreach (explode(separator: ',', string: $matches[1]) as $segment) {
+                    $paths[] = preg_replace(pattern: '/\{[^}]+}/', replacement: mb_trim(string: $segment), subject: $pattern, limit: 1);
+                }
+            }
+        }
+
+        $expandedPaths = [];
+
+        foreach ($paths as $path) {
+            if (! Str::contains(haystack: $path, needles: '*')) {
+                $expandedPaths[] = $path;
+
+                continue;
+            }
+
+            $matches = glob(pattern: base_path(path: $path), flags: GLOB_ONLYDIR);
+
+            if ($matches === false) {
+                continue;
+            }
+
+            foreach ($matches as $match) {
+                $expandedPaths[] = str_replace(search: base_path() . DIRECTORY_SEPARATOR, replace: '', subject: $match);
+            }
+        }
+
+        return array_values(array: array_unique(array: $expandedPaths));
     }
 
     private function extractClassName(SplFileInfo $file): ?string
@@ -50,22 +106,22 @@ class GetAvailableModels
             return null;
         }
 
-        $tokens = token_get_all($this->files->get($file->getPathname()));
+        $tokens = token_get_all(code: $this->files->get(path: $file->getPathname()));
         $namespace = '';
 
         foreach ($tokens as $index => $token) {
-            if (! is_array($token)) {
+            if (! is_array(value: $token)) {
                 continue;
             }
 
             if ($token[0] === T_NAMESPACE) {
-                $namespace = $this->readNamespace($tokens, $index);
+                $namespace = $this->readNamespace(tokens: $tokens, namespaceIndex: $index);
             }
 
             if ($token[0] === T_CLASS) {
-                $class = $this->readClass($tokens, $index);
+                $class = $this->readClass(tokens: $tokens, classIndex: $index);
 
-                return $class === null ? null : mb_ltrim($namespace . '\\' . $class, '\\');
+                return $class === null ? null : mb_ltrim(string: $namespace . '\\' . $class, characters: '\\');
             }
         }
 
@@ -79,14 +135,14 @@ class GetAvailableModels
     {
         $namespace = '';
 
-        for ($index = $namespaceIndex + 1; $index < count($tokens); $index++) {
+        for ($index = $namespaceIndex + 1; $index < count(value: $tokens); $index++) {
             $token = $tokens[$index];
 
             if ($token === ';' || $token === '{') {
                 break;
             }
 
-            if (is_array($token) && in_array($token[0], [T_NAME_QUALIFIED, T_STRING, T_NS_SEPARATOR], true)) {
+            if (is_array(value: $token) && in_array(needle: $token[0], haystack: [T_NAME_QUALIFIED, T_STRING, T_NS_SEPARATOR], strict: true)) {
                 $namespace .= $token[1];
             }
         }
@@ -99,10 +155,10 @@ class GetAvailableModels
      */
     private function readClass(array $tokens, int $classIndex): ?string
     {
-        for ($index = $classIndex + 1; $index < count($tokens); $index++) {
+        for ($index = $classIndex + 1; $index < count(value: $tokens); $index++) {
             $token = $tokens[$index];
 
-            if (is_array($token) && $token[0] === T_STRING) {
+            if (is_array(value: $token) && $token[0] === T_STRING) {
                 return $token[1];
             }
         }
