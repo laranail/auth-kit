@@ -55,11 +55,11 @@ it(description: 'returns php classes from configured model paths', closure: func
         $models = new GetAvailableModels(files: $files)();
 
         expect(value: $models)->toBe(expected: [
-            'App\\Models\\Admin\\Member',
-            'App\\Models\\User',
-            'App\\models\\Profile',
-            'AppModules\\Billing\\Models\\Invoice',
-            'Modules\\CRM\\models\\Contact',
+            'AppModules\Billing\Models\Invoice',
+            'App\Models\Admin\Member',
+            'App\Models\User',
+            'App\models\Profile',
+            'Modules\CRM\models\Contact',
         ]);
     } finally {
         app()->setBasePath($originalBasePath);
