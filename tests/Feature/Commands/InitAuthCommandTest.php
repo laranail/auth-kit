@@ -175,6 +175,8 @@ test(description: 'init auth command scaffolds for module target', closure: func
         'Customer',
     ];
 
+    app(abstract: Filesystem::class)->ensureDirectoryExists(path: base_path(path: 'modules/CRM'));
+
     Prompt::setOutput(output: $output);
     Prompt::fallbackWhen(condition: true);
 
@@ -198,6 +200,11 @@ test(description: 'init auth command scaffolds for module target', closure: func
 
     @unlink(filename: base_path(path: 'modules/CRM/app/Models/Customer.php'));
     @unlink(filename: base_path(path: 'modules/CRM/database/factories/CustomerFactory.php'));
+    @rmdir(base_path(path: 'modules/CRM/database/factories'));
+    @rmdir(base_path(path: 'modules/CRM/database'));
+    @rmdir(base_path(path: 'modules/CRM/app/Models'));
+    @rmdir(base_path(path: 'modules/CRM/app'));
+    @rmdir(base_path(path: 'modules/CRM'));
 });
 
 test(description: 'init auth command cancels when user declines confirmation', closure: function () {
