@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Laravel\Prompts\Prompt;
 use Laravel\Prompts\TextPrompt;
 use Laravel\Prompts\SelectPrompt;
+use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Simtabi\Laranail\Auth\Commands\InitAuthCommand;
@@ -79,6 +80,13 @@ test(description: 'init auth command fails when no existing models are available
 });
 
 test(description: 'init auth command creates a new model from path', closure: function () {
+    $files = app(Filesystem::class);
+    $modelFile = base_path('workbench/app/Models/Admin.php');
+    $factoryFile = base_path('database/factories/AdminFactory.php');
+
+    @unlink($modelFile);
+    @unlink($factoryFile);
+
     $output = new BufferedOutput();
     $selections = [
         AuthScaffoldOption::CREATE_NEW_MODEL->value,
@@ -110,8 +118,10 @@ test(description: 'init auth command creates a new model from path', closure: fu
 
     $exitCode = app(InitAuthCommand::class)->handle(getAvailableModels: $getAvailableModels);
 
+    $outputContent = $output->fetch();
     expect(value: $exitCode)->toBe(expected: Command::SUCCESS)
-        ->and(value: $output->fetch())->toContain('Model created at workbench/app/Models/Admin.php')
+        ->and(value: $outputContent)->toContain('Model created at workbench/app/Models/Admin.php')
+        ->and(value: $outputContent)->toContain('Factory created at database/factories/AdminFactory.php')
         ->and(value: $prompts)->toBe(expected: [
             [
                 'label'   => 'Enter the model path (e.g., app/Models/User)',
@@ -123,12 +133,66 @@ test(description: 'init auth command creates a new model from path', closure: fu
             ],
         ]);
 
-    $createdFile = base_path('workbench/app/Models/Admin.php');
-    expect(value: $createdFile)->toBeFile();
+    expect(value: $modelFile)->toBeFile();
 
-    $content = file_get_contents($createdFile);
-    expect(value: $content)->toContain('namespace Workbench\\App\\Models;')
-        ->and(value: $content)->toContain('class Admin extends Authenticatable');
+    $modelContent = file_get_contents($modelFile);
+    expect(value: $modelContent)->toContain('namespace Workbench\\App\\Models;')
+        ->and(value: $modelContent)->toContain('class Admin extends Authenticatable');
 
-    unlink($createdFile);
+    expect(value: $factoryFile)->toBeFile();
+
+    $factoryContent = file_get_contents($factoryFile);
+    expect(value: $factoryContent)->toContain('namespace Database\\Factories;')
+        ->and(value: $factoryContent)->toContain('class AdminFactory extends Factory')
+        ->and(value: $factoryContent)->toContain('use Workbench\\App\\Models\\Admin;');
+
+    @unlink($modelFile);
+    @unlink($factoryFile);
+});
+
+test(description: 'init auth command replaces existing model', closure: function () {
+    $files = app(Filesystem::class);
+    $modelPath = base_path('workbench/app/Models/Replaceable.php');
+    $factoryPath = base_path('database/factories/ReplaceableFactory.php');
+
+    $files->ensureDirectoryExists(dirname($modelPath));
+    $files->put($modelPath, '<?php namespace Workbench\\App\\Models; class Replaceable {}');
+
+    @unlink($factoryPath);
+
+    $output = new BufferedOutput();
+    $selections = [
+        AuthScaffoldOption::CREATE_NEW_MODEL->value,
+    ];
+    $textInputs = [
+        'workbench/app/Models/Replaceable',
+        'Workbench\\App\\Models',
+    ];
+
+    Prompt::setOutput(output: $output);
+    Prompt::fallbackWhen(condition: true);
+
+    SelectPrompt::fallbackUsing(fallback: function (SelectPrompt $prompt) use (&$selections): string {
+        return array_shift(array: $selections);
+    });
+
+    TextPrompt::fallbackUsing(fallback: function (TextPrompt $prompt) use (&$textInputs): string {
+        return array_shift(array: $textInputs);
+    });
+
+    $getAvailableModels = Mockery::mock(GetAvailableModels::class);
+    $getAvailableModels->shouldNotReceive('__invoke');
+
+    $exitCode = app(InitAuthCommand::class)->handle(getAvailableModels: $getAvailableModels);
+
+    $outputContent = $output->fetch();
+    expect(value: $exitCode)->toBe(expected: Command::SUCCESS)
+        ->and(value: $outputContent)->toContain('Model updated at workbench/app/Models/Replaceable.php');
+
+    $modelContent = file_get_contents($modelPath);
+    expect(value: $modelContent)->toContain('namespace Workbench\\App\\Models;')
+        ->and(value: $modelContent)->toContain('class Replaceable extends Authenticatable');
+
+    @unlink($modelPath);
+    @unlink($factoryPath);
 });
