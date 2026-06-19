@@ -67,26 +67,44 @@ class InitAuthCommand extends Command
                 default: $namespace,
             );
 
-            $targetFile = base_path($path . '.php');
+            $modelFile = base_path($path . '.php');
+            $modelAlreadyExists = $this->files->exists($modelFile);
 
-            if ($this->files->exists($targetFile)) {
-                error(message: "Model already exists at {$path}.php");
+            $modelStub = $this->resolveStub(name: 'model.php.stub');
 
-                return self::FAILURE;
-            }
-
-            $stub = $this->resolveStub(name: 'model.php.stub');
-
-            $content = str_replace(
+            $modelContent = str_replace(
                 search: ['{{ namespace }}', '{{ class }}'],
                 replace: [$namespace, $className],
-                subject: $stub,
+                subject: $modelStub,
             );
 
-            $this->files->ensureDirectoryExists(dirname($targetFile));
-            $this->files->put($targetFile, $content);
+            $this->files->ensureDirectoryExists(dirname($modelFile));
+            $this->files->put($modelFile, $modelContent);
 
-            info(message: "Model created at {$path}.php");
+            info(
+                message: $modelAlreadyExists
+                    ? "Model updated at {$path}.php"
+                    : "Model created at {$path}.php"
+            );
+
+            $factoryPath = $this->resolveFactoryPath(namespace: $namespace, className: $className);
+
+            if ($factoryPath !== null) {
+                $factoryFile = base_path($factoryPath);
+
+                $factoryStub = $this->resolveStub(name: 'factory.php.stub');
+
+                $factoryContent = str_replace(
+                    search: ['{{ namespace }}', '{{ model_namespace }}', '{{ model_class }}', '{{ class }}'],
+                    replace: [$this->getFactoryNamespace($namespace), $namespace, $className, $className . 'Factory'],
+                    subject: $factoryStub,
+                );
+
+                $this->files->ensureDirectoryExists(dirname($factoryFile));
+                $this->files->put($factoryFile, $factoryContent);
+
+                info(message: "Factory created at {$factoryPath}");
+            }
         }
 
         return self::SUCCESS;
@@ -101,5 +119,65 @@ class InitAuthCommand extends Command
         }
 
         return $this->files->get(__DIR__ . '/../../stubs/' . $name);
+    }
+
+    private function resolveFactoryPath(string $namespace, string $className): ?string
+    {
+        $composerJson = base_path('composer.json');
+
+        if (! $this->files->exists($composerJson)) {
+            return null;
+        }
+
+        $composer = json_decode(
+            $this->files->get($composerJson),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        $psr4 = $composer['autoload']['psr-4'] ?? [];
+
+        $factoryNamespaces = array_filter(
+            $psr4,
+            fn (string $path, string $ns): bool => str_contains($ns, 'Factories') || str_contains($path, 'factories'),
+            ARRAY_FILTER_USE_BOTH,
+        );
+
+        if (empty($factoryNamespaces)) {
+            return null;
+        }
+
+        $factoryNs = array_key_first($factoryNamespaces);
+        $factoryDir = mb_rtrim($factoryNamespaces[$factoryNs], '/');
+
+        $factoryClass = $className . 'Factory';
+        $factoryFile = $factoryDir . '/' . $factoryClass . '.php';
+
+        return $factoryFile;
+    }
+
+    private function getFactoryNamespace(string $modelNamespace): string
+    {
+        $composerJson = base_path('composer.json');
+
+        if (! $this->files->exists($composerJson)) {
+            return 'Database\\Factories';
+        }
+
+        $composer = json_decode(
+            $this->files->get($composerJson),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        $psr4 = $composer['autoload']['psr-4'] ?? [];
+
+        foreach ($psr4 as $namespace => $path) {
+            if (str_contains($namespace, 'Factories') || str_contains($path, 'factories')) {
+                return mb_rtrim($namespace, '\\');
+            }
+        }
+
+        return 'Database\\Factories';
     }
 }
