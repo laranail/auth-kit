@@ -3,9 +3,38 @@
 declare(strict_types=1);
 
 return [
-    'models_paths' => [
-        'app/{Models,models}',
-        'app-modules/*/src/{Models,models}',
-        'modules/*/{Models,models}',
+    'targets' => [
+        'root' => [
+            'label'             => 'Root application',
+            'type'              => 'root',
+            'modules_root'      => '',
+            'source_path'       => 'app',
+            'model_namespace'   => 'App\\Models',
+            'model_path'        => 'app/Models',
+            'factory_namespace' => 'Database\\Factories',
+            'factory_path'      => 'database/factories',
+        ],
+
+        'module_app_domain' => [
+            'label'                     => 'Module (app/Domain)',
+            'type'                      => 'module',
+            'modules_root'              => 'modules',
+            'source_path'               => 'app',
+            'model_namespace_pattern'   => 'Modules\\{module}\\Models',
+            'model_path_pattern'        => '{module_path}/app/Models',
+            'factory_namespace_pattern' => 'Modules\\{module}\\Database\\Factories',
+            'factory_path_pattern'      => '{module_path}/database/factories',
+        ],
+
+        'module_src' => [
+            'label'                     => 'Module (src)',
+            'type'                      => 'module',
+            'modules_root'              => 'modules',
+            'source_path'               => 'src',
+            'model_namespace_pattern'   => 'Modules\\{module}\\Models',
+            'model_path_pattern'        => '{module_path}/src/Models',
+            'factory_namespace_pattern' => 'Modules\\{module}\\Database\\Factories',
+            'factory_path_pattern'      => '{module_path}/database/factories',
+        ],
     ],
 ];

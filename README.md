@@ -1,115 +1,124 @@
 # Laravel Auth Kit
 
-`laranail/auth-kit` is a publish-first Laravel authentication scaffolding package supporting multiple authenticatable models.
+`laranail/auth-kit` is a Laravel scaffolding package for generating auth-ready code in configurable application targets.
 
-The package generates routes, controllers, migrations, and actions for email/password authentication. Guards are managed in Laravel's auth config.
-
-The package is managed by `Simtabi\Laranail\Auth\AuthKitServiceProvider` and exposed through the `auth-kit:install` Artisan command.
+The package is exposed through the `auth-kit:init` Artisan command.
 
 ## Requirements
 
-| Version | PHP          | Laravel    |
-|---------|--------------|------------|
-| 1.x     | 8.4.x, 8.5.x | 13.x       |
+| Version | PHP          | Laravel |
+|---------|--------------|---------|
+| 1.x     | 8.4.x, 8.5.x | 13.x    |
 
 ## Installation
-
 ```bash
 composer require laranail/auth-kit
 ```
-
 ## Configuration
 
-Publish the config file:
-
+Publish the package config:
 ```bash
 php artisan vendor:publish --tag=auth-kit-config --provider="Simtabi\Laranail\Auth\AuthKitServiceProvider"
 ```
+The configuration file will be published to:
+```text
+config/auth-kit.php
+```
+Before running the scaffold command, review and update the configured `targets` to match your application structure.
 
-The package configuration lives in `config/auth-kit.php`.
+Targets define where generated files should be written. Depending on your setup, you can configure targets for:
+
+- your main application
+- module-based applications
+- multiple scaffold destinations
 
 ## Usage
 
-Run the interactive install command to scaffold authentication for a model:
-
+Run the interactive scaffold command:
 ```bash
-php artisan auth-kit:install
+php artisan auth-kit:init
 ```
+The command will guide you through the scaffold process.
+
+### Interactive flow
 
 The command will prompt you to:
 
-1. Select the authenticatable model
-2. Set a route prefix and redirect path
+1. Choose where to scaffold authentication files
+2. Select a module if the chosen target is module-based
+3. Enter the model class name
+4. Review the scaffold plan
+5. Confirm before files are created or replaced
 
-## Auth Providers
+Example:
+```text
+This command help you scaffold an authentication.
 
-After running the install command, add the provider to `config/auth.php`:
+? Where would you like to scaffold?
+? Which module?
+? Model class name
 
-```php
-'providers' => [
-    'users' => [
-        'driver' => 'eloquent',
-        'model'  => App\Models\User::class,
-    ],
+========= Scaffolding auth on App =========
+CREATE app/Models/Admin.php
+CREATE database/factories/AdminFactory.php
 
-    // Add your model's provider:
-    'admins' => [
-        'driver' => 'eloquent',
-        'model'  => App\Models\Admin::class,
-    ],
-],
+? Continue?
 ```
+If a generated file already exists, the command will replace it after confirmation.
 
-Then set the guard's provider in `config/auth.php`:
+## What gets generated
 
-```php
-'guards' => [
-    'web' => [
-        'driver'   => 'session',
-        'provider' => 'admins', // Use your model's provider key
-    ],
-],
-```
+The scaffold plan currently generates:
 
-## Migrations
+- an auth-ready model class
+- a corresponding model factory
 
-The package creates migrations for the authenticatable model's table. You can also publish stubs and customize them:
+For a new model, the generated model extends Laravel's `Authenticatable` base class and includes common authentication-related traits and defaults.
 
+The generated factory includes common user attributes such as:
+
+- `name`
+- `email`
+- `email_verified_at`
+- `password`
+- `remember_token`
+
+## Target-based scaffolding
+
+Scaffolding is driven by the configured target.
+
+A target defines things such as:
+
+- the target label shown in the prompt
+- whether the target is application-based or module-based
+- source paths
+- model namespaces and paths
+- factory namespaces and paths
+
+This allows the same command to scaffold models into different parts of your application.
+
+## Published stubs
+
+You may publish the package stubs to customize generated files:
 ```bash
 php artisan vendor:publish --tag=auth-kit-stubs --provider="Simtabi\Laranail\Auth\AuthKitServiceProvider"
 ```
-
-## Traits
-
-The package provides the `HasEmailLogin` trait for authenticatable models:
-
-```php
-use Simtabi\Laranail\Auth\Models\Concerns\HasEmailLogin;
-
-class User extends Authenticatable
-{
-    use HasEmailLogin;
-}
+The stubs will be published to:
+```text
+auth-kit-stubs
 ```
+After publishing, you can modify the stubs to fit your project's coding style or base model conventions.
 
-This trait provides:
-- `resolveByEmail(string $email)` - Find a user by email
-- `validatePassword(string $password)` - Validate the user's password
+## Notes
 
-## Actions
-
-The package provides the following actions:
-
-- `AuthenticateCredentials` - Authenticate a user by email and password
-- `IssueSession` - Issue an authenticated session
-- `ResolveUser` - Resolve a user by email
+- Enter only the model class name when prompted, not a full namespace or file path
+- Module selection is only shown when the chosen target is configured as a module target
+- If no modules are found for a module target, the command exits without generating files
 
 ## Testing
-
 ```bash
 composer test
 ```
 
 ## License
-
 MIT

@@ -12,15 +12,6 @@ it(description: 'returns php classes from configured model paths', closure: func
     $originalBasePath = app()->basePath();
     app()->setBasePath($basePath);
 
-    config()->set(
-        key: 'auth-kit.models_paths',
-        value: [
-            'app/{Models,models}',
-            'app-modules/*/src/{Models,models}',
-            'modules/*/{Models,models}',
-        ]
-    );
-
     $files->ensureDirectoryExists(path: $basePath . '/app/Models/Admin');
     $files->ensureDirectoryExists(path: $basePath . '/app/models');
     $files->ensureDirectoryExists(path: $basePath . '/app-modules/Billing/src/Models');
