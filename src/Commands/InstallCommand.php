@@ -52,15 +52,8 @@ class InstallCommand extends Command
             );
         }
 
-        // Step 3: Select route prefix
-        $routePrefix = text(
-            label: 'Route prefix (e.g., "admin" creates /admin/login)',
-            placeholder: Str::lower(value: $modelShortName),
-            default: Str::lower(value: $modelShortName),
-            hint: 'This will be used as the URL prefix for auth routes.'
-        );
-
-        // Step 4: Show summary
+        // Step 3: Show summary
+        $routePrefix = Str::lower(value: $modelShortName);
         $redirectAfterLogin = '/';
         table(
             headers: ['Setting', 'Value'],
@@ -78,7 +71,7 @@ class InstallCommand extends Command
             return self::SUCCESS;
         }
 
-        // Step 5: Publish files
+        // Step 4: Publish files
         $config = [
             'model_class'          => $modelClass,
             'model_short_name'     => $modelShortName,
@@ -97,7 +90,7 @@ class InstallCommand extends Command
         $this->publishModelConcern(config: $config);
         $this->publishTests(config: $config);
 
-        // Step 6: Show next steps
+        // Step 5: Show next steps
         info(message: 'Installation complete!');
         $this->newLine();
         $this->line(string: 'Next steps:');
