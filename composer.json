@@ -3,7 +3,12 @@
     "name": "laranail/auth-kit",
     "type": "library",
     "description": "A publish-first Laravel authentication scaffolding package supporting multiple authenticatable models.",
-    "keywords": ["laravel", "authentication", "scaffolding", "auth"],
+    "keywords": [
+        "laravel",
+        "authentication",
+        "scaffolding",
+        "auth"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -30,7 +35,10 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Simtabi\\Laranail\\Auth\\Tests\\": "tests/"
+            "Simtabi\\Laranail\\Auth\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "extra": {
@@ -49,6 +57,21 @@
         ],
         "analyse": [
             "vendor/bin/phpstan analyse"
+        ],
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --ansi"
         ]
     },
     "config": {
@@ -64,7 +87,9 @@
             "/.github",
             "/.gitignore",
             "phpunit.xml",
-            "pint.json"
+            "pint.json",
+            "workbench",
+            "testbench.yaml"
         ]
     },
     "minimum-stability": "stable",
