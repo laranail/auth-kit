@@ -10,11 +10,15 @@ use function Laravel\Prompts\info;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\confirm;
 
-use Illuminate\Filesystem\Filesystem;
+use Simtabi\Laranail\Auth\Dto\ScaffoldPlan;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Simtabi\Laranail\Auth\Enums\AuthScaffoldOption;
-use Simtabi\Laranail\Auth\Actions\GetAvailableModels;
+use Simtabi\Laranail\Auth\Services\DiscoverModules;
+use Simtabi\Laranail\Auth\Services\ScaffoldExecutor;
+use Simtabi\Laranail\Auth\Services\ScaffoldPlanBuilder;
+use Simtabi\Laranail\Auth\Services\ScaffoldTargetResolver;
+use Simtabi\Laranail\Auth\Services\ScaffoldTargetRepository;
 
 #[AsCommand(
     name: 'auth-kit:init',
@@ -23,161 +27,95 @@ use Simtabi\Laranail\Auth\Actions\GetAvailableModels;
 class InitAuthCommand extends Command
 {
     public function __construct(
-        private readonly Filesystem $files,
+        private readonly ScaffoldTargetRepository $targets,
+        private readonly ScaffoldTargetResolver $resolver,
+        private readonly DiscoverModules $discoverModules,
+        private readonly ScaffoldPlanBuilder $planBuilder,
+        private readonly ScaffoldExecutor $executor,
     ) {
         parent::__construct();
     }
 
-    public function handle(GetAvailableModels $getAvailableModels): int
+    public function handle(): int
     {
         info(message: 'This command help you scaffold an authentication.');
 
-        $method = AuthScaffoldOption::from(select(
-            label: AuthScaffoldOption::description(),
-            options: AuthScaffoldOption::labels(),
-        ));
+        $targetLabels = $this->targets->labels();
 
-        if ($method === AuthScaffoldOption::USE_EXISTING_MODEL) {
-            $models = $getAvailableModels();
+        $targetKey = select(
+            label: 'Where would you like to scaffold?',
+            options: array_values(array: $targetLabels),
+        );
 
-            if (empty($models)) {
-                error(message: 'No models found in Models or models directory.');
+        $selectedKey = array_search(needle: $targetKey, haystack: $targetLabels, strict: true);
+
+        $targetConfig = $this->targets->find(key: $selectedKey);
+
+        $moduleName = null;
+
+        if ($targetConfig['type'] === 'module') {
+            $modules = $this->discoverModules->all(modulesRoot: $targetConfig['modules_root']);
+
+            if ($modules === []) {
+                error(message: "No modules found in [{$targetConfig['modules_root']}/].");
 
                 return self::FAILURE;
             }
 
-            select(
-                label: 'Which model would you like to scaffold authentication for?',
-                options: $models,
+            $moduleNames = array_column(array: $modules, column_key: 'name');
+
+            $moduleName = select(
+                label: 'Which module?',
+                options: $moduleNames,
             );
         }
 
-        if ($method === AuthScaffoldOption::CREATE_NEW_MODEL) {
-            $path = text(
-                label: 'Enter the model path (e.g., app/Models/User)',
-                required: true,
-            );
+        $target = $this->resolver->resolve(key: $selectedKey, moduleName: $moduleName);
 
-            $segments = explode(separator: '/', string: $path);
-            $className = (string) array_pop($segments);
-            $namespace = implode(separator: '\\', array: array_map(callback: 'ucfirst', array: $segments));
+        $modelClass = text(
+            label: 'Model class name',
+            required: true,
+            validate: fn (string $value): ?string => str_contains(haystack: $value, needle: '/') || str_contains(haystack: $value, needle: '\\')
+                ? 'Provide only the class name, not a full path.'
+                : null,
+        );
 
-            $namespace = text(
-                label: 'Confirm the model namespace',
-                default: $namespace,
-            );
+        $plan = $this->planBuilder->buildForNewModel(target: $target, modelClass: $modelClass);
 
-            $modelFile = base_path($path . '.php');
-            $modelAlreadyExists = $this->files->exists($modelFile);
+        $this->previewPlan(plan: $plan);
 
-            $modelStub = $this->resolveStub(name: 'model.php.stub');
+        if (! confirm(label: 'Continue?')) {
+            info(message: 'Cancelled.');
 
-            $modelContent = str_replace(
-                search: ['{{ namespace }}', '{{ class }}'],
-                replace: [$namespace, $className],
-                subject: $modelStub,
-            );
-
-            $this->files->ensureDirectoryExists(dirname($modelFile));
-            $this->files->put($modelFile, $modelContent);
-
-            info(
-                message: $modelAlreadyExists
-                    ? "Model updated at {$path}.php"
-                    : "Model created at {$path}.php"
-            );
-
-            $factoryPath = $this->resolveFactoryPath(namespace: $namespace, className: $className);
-
-            if ($factoryPath !== null) {
-                $factoryFile = base_path($factoryPath);
-
-                $factoryStub = $this->resolveStub(name: 'factory.php.stub');
-
-                $factoryContent = str_replace(
-                    search: ['{{ namespace }}', '{{ model_namespace }}', '{{ model_class }}', '{{ class }}'],
-                    replace: [$this->getFactoryNamespace($namespace), $namespace, $className, $className . 'Factory'],
-                    subject: $factoryStub,
-                );
-
-                $this->files->ensureDirectoryExists(dirname($factoryFile));
-                $this->files->put($factoryFile, $factoryContent);
-
-                info(message: "Factory created at {$factoryPath}");
-            }
+            return self::SUCCESS;
         }
+
+        $this->executor->execute(plan: $plan);
+
+        $this->printSummary(plan: $plan);
 
         return self::SUCCESS;
     }
 
-    private function resolveStub(string $name): string
+    private function previewPlan(ScaffoldPlan $plan): void
     {
-        $published = base_path('auth-kit-stubs/' . $name);
+        $output = "========= Scaffolding auth on {$plan->target->label} =========";
 
-        if ($this->files->exists($published)) {
-            return $this->files->get($published);
+        foreach ($plan->files as $file) {
+            $action = $file->exists ? 'REPLACE' : 'CREATE';
+            $output .= "\n{$action} {$file->description}";
         }
 
-        return $this->files->get(__DIR__ . '/../../stubs/' . $name);
+        info($output);
     }
 
-    private function resolveFactoryPath(string $namespace, string $className): ?string
+    private function printSummary(ScaffoldPlan $plan): void
     {
-        $composerJson = base_path('composer.json');
+        info(message: 'Done!');
 
-        if (! $this->files->exists($composerJson)) {
-            return null;
+        foreach ($plan->files as $file) {
+            $action = $file->exists ? 'Replaced' : 'Created';
+            info(message: "  {$action} {$file->description}");
         }
-
-        $composer = json_decode(
-            $this->files->get($composerJson),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
-
-        $psr4 = $composer['autoload']['psr-4'] ?? [];
-
-        $factoryNamespaces = array_filter(
-            $psr4,
-            fn (string $path, string $ns): bool => str_contains($ns, 'Factories') || str_contains($path, 'factories'),
-            ARRAY_FILTER_USE_BOTH,
-        );
-
-        if (empty($factoryNamespaces)) {
-            return null;
-        }
-
-        $factoryNs = array_key_first($factoryNamespaces);
-        $factoryDir = mb_rtrim($factoryNamespaces[$factoryNs], '/');
-
-        $factoryClass = $className . 'Factory';
-        $factoryFile = $factoryDir . '/' . $factoryClass . '.php';
-
-        return $factoryFile;
-    }
-
-    private function getFactoryNamespace(string $modelNamespace): string
-    {
-        $composerJson = base_path('composer.json');
-
-        if (! $this->files->exists($composerJson)) {
-            return 'Database\\Factories';
-        }
-
-        $composer = json_decode(
-            $this->files->get($composerJson),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
-
-        $psr4 = $composer['autoload']['psr-4'] ?? [];
-
-        foreach ($psr4 as $namespace => $path) {
-            if (str_contains($namespace, 'Factories') || str_contains($path, 'factories')) {
-                return mb_rtrim($namespace, '\\');
-            }
-        }
-
-        return 'Database\\Factories';
     }
 }

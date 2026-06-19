@@ -46,7 +46,11 @@ class GetAvailableModels
      */
     private function resolveModelPaths(): array
     {
-        $paths = config(key: 'auth-kit.models_paths', default: []);
+        $paths = [
+            'app/{Models,models}',
+            'app-modules/*/src/{Models,models}',
+            'modules/*/{Models,models}',
+        ];
         $resolvedPaths = [];
 
         foreach ($paths as $path) {
