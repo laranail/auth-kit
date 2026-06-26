@@ -23,6 +23,10 @@ final class ScaffoldExecutor
         $written = [];
 
         foreach ($plan->files as $file) {
+            if ($file->exists && !$file->replace) {
+                continue;
+            }
+
             $this->files->ensureDirectoryExists(dirname($file->path));
             $this->files->put($file->path, $file->contents);
 
