@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Services;
 
+use InvalidArgumentException;
 use Illuminate\Filesystem\Filesystem;
 
 final class StubRenderer
@@ -26,6 +27,10 @@ final class StubRenderer
 
     private function resolveStub(string $name): string
     {
+        if (! preg_match('/^[a-zA-Z0-9._-]+$/', $name)) {
+            throw new InvalidArgumentException("Invalid stub name: {$name}");
+        }
+
         $published = base_path('auth-kit-stubs/' . $name);
 
         if ($this->files->exists($published)) {
