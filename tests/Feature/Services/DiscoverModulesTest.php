@@ -16,7 +16,7 @@ test(description: 'discover modules returns empty array when directory does not 
 test(description: 'discover modules returns empty array when no modules exist', closure: function () {
     $discover = new DiscoverModules(files: new Filesystem());
 
-    $modules = $discover->all(modulesRoot: 'database/migrations');
+    $modules = $discover->all(modulesRoot: 'workbench/database/migrations');
 
     expect(value: $modules)->toBeEmpty();
 });
