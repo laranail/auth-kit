@@ -75,10 +75,19 @@ final class ScaffoldPlanBuilder
     private function buildMigrationFile(ScaffoldTarget $target, string $modelClass): PlannedFile
     {
         $table = Str::snake(Str::pluralStudly($modelClass));
-        $filename = date('Y_m_d_His') . '_create_' . $table . '_table.php';
-        $relativePath = $target->migrationPath . '/' . $filename;
-        $absolutePath = base_path($relativePath);
-        $exists = $this->files->exists($absolutePath);
+        $suffix = '_create_' . $table . '_table.php';
+        $timestamp = time();
+
+        do {
+            $filename = date('Y_m_d_His', $timestamp) . $suffix;
+            $relativePath = $target->migrationPath . '/' . $filename;
+            $absolutePath = base_path($relativePath);
+            $exists = $this->files->exists($absolutePath);
+
+            if ($exists) {
+                $timestamp++;
+            }
+        } while ($exists);
 
         $contents = $this->stubRenderer->render(stubName: 'migration.php.stub', variables: [
             '{{ table }}' => $table,
