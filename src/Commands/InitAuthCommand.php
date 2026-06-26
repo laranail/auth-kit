@@ -36,6 +36,44 @@ class InitAuthCommand extends Command
         parent::__construct();
     }
 
+    public static function validateModelClass(string $value): ?string
+    {
+        if (mb_trim($value) === '') {
+            return 'The class name cannot be empty.';
+        }
+
+        if (str_contains(haystack: $value, needle: '/') || str_contains(haystack: $value, needle: '\\')) {
+            return 'Provide only the class name, not a full path.';
+        }
+
+        if (preg_match(pattern: '/^[0-9]/', subject: $value)) {
+            return 'The class name cannot start with a number.';
+        }
+
+        if (!preg_match(pattern: '/^[a-zA-Z_][a-zA-Z0-9_]*$/', subject: $value)) {
+            return 'The class name may only contain letters, numbers, and underscores.';
+        }
+
+        $reserved = [
+            'abstract', 'and', 'array', 'as', 'break', 'callable', 'case', 'catch',
+            'class', 'clone', 'const', 'continue', 'declare', 'default', 'die', 'do',
+            'echo', 'else', 'elseif', 'empty', 'enddeclare', 'endfor', 'endforeach',
+            'endif', 'endswitch', 'endwhile', 'eval', 'exit', 'extends', 'final',
+            'finally', 'fn', 'for', 'foreach', 'function', 'global', 'goto', 'if',
+            'implements', 'include', 'include_once', 'instanceof', 'insteadof',
+            'interface', 'isset', 'list', 'match', 'namespace', 'new', 'or', 'print',
+            'private', 'protected', 'public', 'readonly', 'require', 'require_once',
+            'return', 'static', 'switch', 'throw', 'trait', 'try', 'unset', 'use',
+            'var', 'while', 'xor', 'yield', 'yield_from',
+        ];
+
+        if (in_array(needle: mb_strtolower(string: $value), haystack: $reserved, strict: true)) {
+            return 'The class name cannot be a PHP reserved word.';
+        }
+
+        return null;
+    }
+
     public function handle(): int
     {
         info(message: 'This command help you scaffold an authentication.');
@@ -75,9 +113,7 @@ class InitAuthCommand extends Command
         $modelClass = text(
             label: 'Model class name',
             required: true,
-            validate: fn (string $value): ?string => str_contains(haystack: $value, needle: '/') || str_contains(haystack: $value, needle: '\\')
-                ? 'Provide only the class name, not a full path.'
-                : null,
+            validate: fn (string $value): ?string => self::validateModelClass(value: $value),
         );
 
         $plan = $this->planBuilder->buildForNewModel(target: $target, modelClass: $modelClass);
