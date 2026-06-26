@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
+use Simtabi\Laranail\Auth\Enums\Stack;
 use Simtabi\Laranail\Auth\Dto\PlannedFile;
 use Simtabi\Laranail\Auth\Dto\ScaffoldPlan;
 use Simtabi\Laranail\Auth\Dto\ScaffoldTarget;
@@ -27,6 +28,7 @@ test(description: 'scaffold executor creates missing directories and writes file
     $plan = new ScaffoldPlan(
         target: $target,
         modelClass: 'ExecutorTestModel',
+        stack: Stack::Blade,
         files: [
             new PlannedFile(
                 path: base_path('app/Models/ExecutorTestModel.php'),
@@ -72,6 +74,7 @@ test(description: 'scaffold executor skips existing files when replace is false'
     $plan = new ScaffoldPlan(
         target: $target,
         modelClass: 'ExecutorSkipModel',
+        stack: Stack::Blade,
         files: [
             new PlannedFile(
                 path: $filePath,
@@ -116,6 +119,7 @@ test(description: 'scaffold executor replaces existing files when replace is tru
     $plan = new ScaffoldPlan(
         target: $target,
         modelClass: 'ExecutorReplaceModel',
+        stack: Stack::Blade,
         files: [
             new PlannedFile(
                 path: $filePath,

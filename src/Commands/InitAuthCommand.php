@@ -12,6 +12,7 @@ use function Laravel\Prompts\error;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\confirm;
 
+use Simtabi\Laranail\Auth\Enums\Stack;
 use Simtabi\Laranail\Auth\Dto\ScaffoldPlan;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Simtabi\Laranail\Auth\Services\DiscoverModules;
@@ -78,6 +79,11 @@ class InitAuthCommand extends Command
     {
         info(message: 'This command help you scaffold an authentication.');
 
+        $stack = Stack::from(select(
+            label: 'Which stack would you like to install?',
+            options: Stack::options(),
+        ));
+
         $targetLabels = $this->targets->labels();
 
         $targetKey = select(
@@ -116,7 +122,7 @@ class InitAuthCommand extends Command
             validate: fn (string $value): ?string => self::validateModelClass(value: $value),
         );
 
-        $plan = $this->planBuilder->buildForNewModel(target: $target, modelClass: $modelClass);
+        $plan = $this->planBuilder->buildForNewModel(target: $target, modelClass: $modelClass, stack: $stack);
 
         $this->previewPlan(plan: $plan);
 
@@ -135,7 +141,7 @@ class InitAuthCommand extends Command
 
     private function previewPlan(ScaffoldPlan $plan): void
     {
-        $output = "========= Scaffolding auth on {$plan->target->label} =========";
+        $output = "========= Scaffolding auth on {$plan->target->label} (stack: {$plan->stack->value}) =========";
 
         foreach ($plan->files as $file) {
             $action = $file->exists ? 'REPLACE' : 'CREATE';

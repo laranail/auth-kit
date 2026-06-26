@@ -31,6 +31,7 @@ test(description: 'init auth command creates a new model for root target', closu
 
     $output = new BufferedOutput();
     $selections = [
+        'blade',
         'Root application',
     ];
     $textInputs = [
@@ -70,6 +71,10 @@ test(description: 'init auth command creates a new model for root target', closu
         ->and(value: $outputContent)->toContain('Created database/factories/AdminFactory.php')
         ->and(value: $outputContent)->toContain('create_admins_table.php')
         ->and(value: $prompts)->toBe(expected: [
+            [
+                'label'   => 'Which stack would you like to install?',
+                'options' => ['blade' => 'Blade'],
+            ],
             [
                 'label'   => 'Where would you like to scaffold?',
                 'options' => ['Root application', 'Module (app/Domain)', 'Module (src)'],
@@ -112,6 +117,7 @@ test(description: 'init auth command replaces existing model for root target', c
 
     $output = new BufferedOutput();
     $selections = [
+        'blade',
         'Root application',
     ];
     $textInputs = [
@@ -153,6 +159,7 @@ test(description: 'init auth command replaces existing model for root target', c
 test(description: 'init auth command fails when no modules found for module target', closure: function () {
     $output = new BufferedOutput();
     $selections = [
+        'blade',
         'Module (app/Domain)',
     ];
 
@@ -179,6 +186,7 @@ test(description: 'init auth command fails when no modules found for module targ
 test(description: 'init auth command scaffolds for module target', closure: function () {
     $output = new BufferedOutput();
     $selections = [
+        'blade',
         'Module (app/Domain)',
         'CRM',
     ];
@@ -235,6 +243,7 @@ test(description: 'init auth command cancels when user declines confirmation', c
 
     $output = new BufferedOutput();
     $selections = [
+        'blade',
         'Root application',
     ];
     $textInputs = [
