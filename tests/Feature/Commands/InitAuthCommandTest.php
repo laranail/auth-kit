@@ -262,3 +262,41 @@ test(description: 'init auth command cancels when user declines confirmation', c
         ->and(value: $modelFile)->not->toBeFile()
         ->and(value: $factoryFile)->not->toBeFile();
 });
+
+test(description: 'validateModelClass rejects empty string', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass(''))->toBe(expected: 'The class name cannot be empty.')
+        ->and(value: InitAuthCommand::validateModelClass('  '))->toBe(expected: 'The class name cannot be empty.');
+});
+
+test(description: 'validateModelClass rejects paths with slashes', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass('App/Models/User'))->toBe(expected: 'Provide only the class name, not a full path.')
+        ->and(value: InitAuthCommand::validateModelClass('App\\Models\\User'))->toBe(expected: 'Provide only the class name, not a full path.');
+});
+
+test(description: 'validateModelClass rejects names starting with a number', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass('1User'))->toBe(expected: 'The class name cannot start with a number.')
+        ->and(value: InitAuthCommand::validateModelClass('0Test'))->toBe(expected: 'The class name cannot start with a number.');
+});
+
+test(description: 'validateModelClass rejects names with special characters', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass('Admin-User'))->toBe(expected: 'The class name may only contain letters, numbers, and underscores.')
+        ->and(value: InitAuthCommand::validateModelClass('Admin User'))->toBe(expected: 'The class name may only contain letters, numbers, and underscores.')
+        ->and(value: InitAuthCommand::validateModelClass('Admin@User'))->toBe(expected: 'The class name may only contain letters, numbers, and underscores.');
+});
+
+test(description: 'validateModelClass rejects PHP reserved words', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass('class'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
+        ->and(value: InitAuthCommand::validateModelClass('new'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
+        ->and(value: InitAuthCommand::validateModelClass('function'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
+        ->and(value: InitAuthCommand::validateModelClass('CLASS'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
+        ->and(value: InitAuthCommand::validateModelClass('New'))->toBe(expected: 'The class name cannot be a PHP reserved word.');
+});
+
+test(description: 'validateModelClass accepts valid class names', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass('User'))->toBeNull()
+        ->and(value: InitAuthCommand::validateModelClass('Admin'))->toBeNull()
+        ->and(value: InitAuthCommand::validateModelClass('UserProfile'))->toBeNull()
+        ->and(value: InitAuthCommand::validateModelClass('_Private'))->toBeNull()
+        ->and(value: InitAuthCommand::validateModelClass('User2'))->toBeNull()
+        ->and(value: InitAuthCommand::validateModelClass('FooBar123'))->toBeNull();
+});
