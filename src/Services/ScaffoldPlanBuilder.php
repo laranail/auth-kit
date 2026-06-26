@@ -27,21 +27,7 @@ final class ScaffoldPlanBuilder
         return new ScaffoldPlan(
             target: $target,
             modelClass: $modelClass,
-            usingExistingModel: false,
             files: [$modelFile, $factoryFile, $migrationFile],
-        );
-    }
-
-    public function buildForExistingModel(ScaffoldTarget $target, string $existingModelClass): ScaffoldPlan
-    {
-        $className = class_basename($existingModelClass);
-        $factoryFile = $this->buildFactoryFile(target: $target, modelClass: $className);
-
-        return new ScaffoldPlan(
-            target: $target,
-            modelClass: $existingModelClass,
-            usingExistingModel: true,
-            files: [$factoryFile],
         );
     }
 

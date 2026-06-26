@@ -29,7 +29,6 @@ test(description: 'scaffold plan builder builds plan for new model', closure: fu
 
     expect(value: $plan)->toBeInstanceOf(ScaffoldPlan::class)
         ->and(value: $plan->modelClass)->toBe(expected: 'Admin')
-        ->and(value: $plan->usingExistingModel)->toBeFalse()
         ->and(value: $plan->files)->toHaveCount(3);
 
     $modelFile = $plan->files[0];
@@ -48,35 +47,6 @@ test(description: 'scaffold plan builder builds plan for new model', closure: fu
         ->and(value: $migrationFile->description)->toContain('create_admins_table.php')
         ->and(value: $migrationFile->contents)->toContain("Schema::create('admins'")
         ->and(value: $migrationFile->contents)->toContain("Schema::dropIfExists('admins')");
-});
-
-test(description: 'scaffold plan builder builds plan for existing model', closure: function () {
-    $target = new ScaffoldTarget(
-        key: 'root',
-        label: 'Root application',
-        type: 'root',
-        moduleName: null,
-        modulePath: null,
-        basePath: '',
-        sourcePath: 'app',
-        modelPath: 'app/Models',
-        modelNamespace: 'App\\Models',
-        factoryPath: 'database/factories',
-        factoryNamespace: 'Database\\Factories',
-        migrationPath: 'database/migrations',
-    );
-
-    $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
-    $plan = $builder->buildForExistingModel($target, 'Admin');
-
-    expect(value: $plan->usingExistingModel)->toBeTrue()
-        ->and(value: $plan->modelClass)->toBe(expected: 'Admin')
-        ->and(value: $plan->files)->toHaveCount(1);
-
-    $factoryFile = $plan->files[0];
-    expect(value: $factoryFile->description)->toBe(expected: 'database/factories/AdminFactory.php')
-        ->and(value: $factoryFile->contents)->toContain('namespace Database\\Factories;')
-        ->and(value: $factoryFile->contents)->toContain('use App\\Models\\Admin;');
 });
 
 test(description: 'scaffold plan builder marks existing files as replace', closure: function () {

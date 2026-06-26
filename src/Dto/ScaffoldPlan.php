@@ -12,7 +12,6 @@ final readonly class ScaffoldPlan
     public function __construct(
         public ScaffoldTarget $target,
         public string $modelClass,
-        public bool $usingExistingModel,
         public array $files,
     ) {
     }
