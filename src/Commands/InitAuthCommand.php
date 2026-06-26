@@ -12,6 +12,7 @@ use function Laravel\Prompts\error;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\confirm;
 
+use Simtabi\Laranail\Auth\Enums\Stack;
 use Simtabi\Laranail\Auth\Dto\ScaffoldPlan;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Simtabi\Laranail\Auth\Services\DiscoverModules;
@@ -50,6 +51,10 @@ class InitAuthCommand extends Command
             return 'The class name cannot start with a number.';
         }
 
+        if (preg_match(pattern: '/^[a-z]/', subject: $value)) {
+            return 'The class name must start with an uppercase letter (PascalCase).';
+        }
+
         if (!preg_match(pattern: '/^[a-zA-Z_][a-zA-Z0-9_]*$/', subject: $value)) {
             return 'The class name may only contain letters, numbers, and underscores.';
         }
@@ -77,6 +82,11 @@ class InitAuthCommand extends Command
     public function handle(): int
     {
         info(message: 'This command help you scaffold an authentication.');
+
+        $stack = Stack::from(select(
+            label: 'Which stack would you like to install?',
+            options: Stack::options(),
+        ));
 
         $targetLabels = $this->targets->labels();
 
@@ -116,7 +126,7 @@ class InitAuthCommand extends Command
             validate: fn (string $value): ?string => self::validateModelClass(value: $value),
         );
 
-        $plan = $this->planBuilder->buildForNewModel(target: $target, modelClass: $modelClass);
+        $plan = $this->planBuilder->buildForNewModel(target: $target, modelClass: $modelClass, stack: $stack);
 
         $this->previewPlan(plan: $plan);
 
@@ -135,7 +145,7 @@ class InitAuthCommand extends Command
 
     private function previewPlan(ScaffoldPlan $plan): void
     {
-        $output = "========= Scaffolding auth on {$plan->target->label} =========";
+        $output = "========= Scaffolding auth on {$plan->target->label} (stack: {$plan->stack->value}) =========";
 
         foreach ($plan->files as $file) {
             $action = $file->exists ? 'REPLACE' : 'CREATE';

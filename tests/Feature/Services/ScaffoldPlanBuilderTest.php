@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
+use Simtabi\Laranail\Auth\Enums\Stack;
 use Simtabi\Laranail\Auth\Dto\ScaffoldPlan;
 use Simtabi\Laranail\Auth\Dto\ScaffoldTarget;
 use Simtabi\Laranail\Auth\Services\StubRenderer;
@@ -25,10 +26,11 @@ test(description: 'scaffold plan builder builds plan for new model', closure: fu
     );
 
     $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
-    $plan = $builder->buildForNewModel($target, 'Admin');
+    $plan = $builder->buildForNewModel($target, 'Admin', Stack::Blade);
 
     expect(value: $plan)->toBeInstanceOf(ScaffoldPlan::class)
         ->and(value: $plan->modelClass)->toBe(expected: 'Admin')
+        ->and(value: $plan->stack)->toBe(Stack::Blade)
         ->and(value: $plan->files)->toHaveCount(3);
 
     $modelFile = $plan->files[0];
@@ -66,7 +68,7 @@ test(description: 'scaffold plan builder marks existing files as replace', closu
     );
 
     $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
-    $plan = $builder->buildForNewModel($target, 'NonexistentUser');
+    $plan = $builder->buildForNewModel($target, 'NonexistentUser', Stack::Blade);
 
     $modelFile = $plan->files[0];
     expect(value: $modelFile->exists)->toBeFalse()
@@ -90,7 +92,7 @@ test(description: 'scaffold plan builder derives table name from model class', c
     );
 
     $builder = new ScaffoldPlanBuilder(new Filesystem(), new StubRenderer(new Filesystem()));
-    $plan = $builder->buildForNewModel($target, 'AdminUser');
+    $plan = $builder->buildForNewModel($target, 'AdminUser', Stack::Blade);
 
     $migrationFile = $plan->files[2];
     expect(value: $migrationFile->description)->toContain('create_admin_users_table.php')
