@@ -294,11 +294,15 @@ test(description: 'validateModelClass rejects names with special characters', cl
 });
 
 test(description: 'validateModelClass rejects PHP reserved words', closure: function () {
-    expect(value: InitAuthCommand::validateModelClass('class'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
-        ->and(value: InitAuthCommand::validateModelClass('new'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
-        ->and(value: InitAuthCommand::validateModelClass('function'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
-        ->and(value: InitAuthCommand::validateModelClass('CLASS'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
+    expect(value: InitAuthCommand::validateModelClass('CLASS'))->toBe(expected: 'The class name cannot be a PHP reserved word.')
         ->and(value: InitAuthCommand::validateModelClass('New'))->toBe(expected: 'The class name cannot be a PHP reserved word.');
+});
+
+test(description: 'validateModelClass rejects lowercase names', closure: function () {
+    expect(value: InitAuthCommand::validateModelClass('class'))->toBe(expected: 'The class name must start with an uppercase letter (PascalCase).')
+        ->and(value: InitAuthCommand::validateModelClass('new'))->toBe(expected: 'The class name must start with an uppercase letter (PascalCase).')
+        ->and(value: InitAuthCommand::validateModelClass('function'))->toBe(expected: 'The class name must start with an uppercase letter (PascalCase).')
+        ->and(value: InitAuthCommand::validateModelClass('user'))->toBe(expected: 'The class name must start with an uppercase letter (PascalCase).');
 });
 
 test(description: 'validateModelClass accepts valid class names', closure: function () {

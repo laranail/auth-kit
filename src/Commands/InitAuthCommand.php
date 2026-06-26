@@ -51,6 +51,10 @@ class InitAuthCommand extends Command
             return 'The class name cannot start with a number.';
         }
 
+        if (preg_match(pattern: '/^[a-z]/', subject: $value)) {
+            return 'The class name must start with an uppercase letter (PascalCase).';
+        }
+
         if (!preg_match(pattern: '/^[a-zA-Z_][a-zA-Z0-9_]*$/', subject: $value)) {
             return 'The class name may only contain letters, numbers, and underscores.';
         }
