@@ -5,18 +5,10 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Support\DeferrableProvider;
 
-class AuthKitServiceProvider extends ServiceProvider
+class AuthKitServiceProvider extends ServiceProvider implements DeferrableProvider
 {
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        $this->registerPublishing();
-        $this->registerCommands();
-    }
-
     /**
      * Register any application services.
      */
@@ -26,6 +18,21 @@ class AuthKitServiceProvider extends ServiceProvider
             path: __DIR__ . '/../config/auth-kit.php',
             key: 'auth-kit'
         );
+
+        $this->registerPublishing();
+        $this->registerCommands();
+    }
+
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array<int, string>
+     */
+    public function provides(): array
+    {
+        return [
+            Commands\InitAuthCommand::class,
+        ];
     }
 
     /**
