@@ -27,7 +27,6 @@ test(description: 'scaffold executor creates missing directories and writes file
     $plan = new ScaffoldPlan(
         target: $target,
         modelClass: 'ExecutorTestModel',
-        usingExistingModel: false,
         files: [
             new PlannedFile(
                 path: base_path('app/Models/ExecutorTestModel.php'),
@@ -73,7 +72,6 @@ test(description: 'scaffold executor skips existing files when replace is false'
     $plan = new ScaffoldPlan(
         target: $target,
         modelClass: 'ExecutorSkipModel',
-        usingExistingModel: false,
         files: [
             new PlannedFile(
                 path: $filePath,
@@ -118,7 +116,6 @@ test(description: 'scaffold executor replaces existing files when replace is tru
     $plan = new ScaffoldPlan(
         target: $target,
         modelClass: 'ExecutorReplaceModel',
-        usingExistingModel: false,
         files: [
             new PlannedFile(
                 path: $filePath,
