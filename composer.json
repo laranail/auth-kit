@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laranail/auth-kit",
     "type": "library",
-    "description": "A publish-first Laravel authentication scaffolding package supporting multiple authenticatable models.",
+    "description": "A publish-first Laravel authentication scaffolding package.",
     "keywords": [
         "laravel",
         "authentication",
@@ -18,8 +18,7 @@
     ],
     "require": {
         "php": "^8.4 | ^8.5",
-        "laravel/framework": "^13.0",
-        "laravel/prompts": "^v0.3.0"
+        "laravel/framework": "^13.0"
     },
     "require-dev": {
         "pestphp/pest": "^4.0",
@@ -29,8 +28,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Simtabi\\Laranail\\Auth\\": "src/",
-            "Simtabi\\Laranail\\Auth\\Database\\Factories\\": "database/factories/"
+            "Simtabi\\Laranail\\Auth\\": "src/"
         }
     },
     "autoload-dev": {
@@ -55,20 +53,9 @@
         "test": [
             "vendor/bin/pest --parallel"
         ],
-        "analyse": [
-            "vendor/bin/phpstan analyse"
-        ],
         "post-autoload-dump": [
             "@clear",
             "@prepare"
-        ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "build": "@php vendor/bin/testbench workbench:build --ansi",
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@build",
-            "@php vendor/bin/testbench serve --ansi"
         ],
         "lint": [
             "@php vendor/bin/pint --ansi"
