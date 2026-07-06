@@ -6,6 +6,7 @@ namespace Simtabi\Laranail\Auth\Contracts;
 
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 interface AuthMethod
 {
@@ -33,4 +34,10 @@ interface AuthMethod
      * Get the configuration for this method.
      */
     public function getConfig(): array;
+
+    /**
+     * Redirect to OAuth provider (social methods only).
+     * Returns null for non-social methods.
+     */
+    public function redirect(): ?RedirectResponse;
 }

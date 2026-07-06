@@ -10,18 +10,17 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Simtabi\Laranail\Auth\Support\AuthConfig;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Simtabi\Laranail\Auth\Contracts\AuthMethod;
 use Simtabi\Laranail\Auth\Events\UsernamePasswordLoginFailed;
 use Simtabi\Laranail\Auth\Events\UsernamePasswordLoginSuccess;
 use Simtabi\Laranail\Auth\Events\UsernamePasswordLoginThrottled;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
-class UsernamePasswordLoginMethod implements AuthMethod
+class UsernamePasswordLoginMethod extends BaseAuthMethod
 {
     public function __construct(
-        private ?string $guard = null,
-        private int $maxAttempts = 5,
-        private int $decaySeconds = 60,
+        protected ?string $guard = null,
+        protected int $maxAttempts = 5,
+        protected int $decaySeconds = 60,
     ) {
     }
 

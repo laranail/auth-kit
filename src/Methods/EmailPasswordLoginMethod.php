@@ -10,18 +10,17 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Simtabi\Laranail\Auth\Support\AuthConfig;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Simtabi\Laranail\Auth\Contracts\AuthMethod;
 use Simtabi\Laranail\Auth\Events\EmailPasswordLoginFailed;
 use Simtabi\Laranail\Auth\Events\EmailPasswordLoginSuccess;
 use Simtabi\Laranail\Auth\Events\EmailPasswordLoginThrottled;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
-class EmailPasswordLoginMethod implements AuthMethod
+class EmailPasswordLoginMethod extends BaseAuthMethod
 {
     public function __construct(
-        private ?string $guard = null,
-        private int $maxAttempts = 5,
-        private int $decaySeconds = 60,
+        protected ?string $guard = null,
+        protected int $maxAttempts = 5,
+        protected int $decaySeconds = 60,
     ) {
     }
 

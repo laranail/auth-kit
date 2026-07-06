@@ -6,6 +6,7 @@ namespace Simtabi\Laranail\Auth;
 
 use Illuminate\Support\ServiceProvider;
 use Simtabi\Laranail\Auth\Guards\LaranailGuard;
+use Simtabi\Laranail\Auth\Methods\SocialLoginMethod;
 use Simtabi\Laranail\Auth\Methods\EmailPasswordLoginMethod;
 use Simtabi\Laranail\Auth\Methods\UsernamePasswordLoginMethod;
 
@@ -13,6 +14,11 @@ class AuthKitServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/auth-kit.php',
+            'auth-kit'
+        );
+
         $this->registerAuthManager();
         $this->registerMethods();
         $this->registerGuard();
@@ -34,6 +40,7 @@ class AuthKitServiceProvider extends ServiceProvider
 
             $manager->registerMethod('email', EmailPasswordLoginMethod::class);
             $manager->registerMethod('username', UsernamePasswordLoginMethod::class);
+            $manager->registerMethod('social', SocialLoginMethod::class);
 
             return $manager;
         });
@@ -49,6 +56,11 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->scoped(
             abstract: UsernamePasswordLoginMethod::class,
             concrete: fn () => new UsernamePasswordLoginMethod(),
+        );
+
+        $this->app->scoped(
+            abstract: SocialLoginMethod::class,
+            concrete: fn () => new SocialLoginMethod(),
         );
     }
 
@@ -74,6 +86,10 @@ class AuthKitServiceProvider extends ServiceProvider
         if (! $this->app->runningInConsole()) {
             return;
         }
+
+        $this->publishes(paths: [
+            __DIR__.'/../config/auth-kit.php' => config_path('auth-kit.php'),
+        ], groups: 'auth-kit-config');
 
         $this->publishes(paths: [
             __DIR__.'/../database/migrations' => database_path('migrations'),

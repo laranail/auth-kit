@@ -118,4 +118,34 @@ class AuthManager
 
         return null;
     }
+
+    /**
+     * Register a social provider configuration.
+     *
+     * @param  array{client_id: string, client_secret: string, redirect: string}  $config
+     */
+    public function registerSocialProvider(string $name, array $config): static
+    {
+        config(["auth-kit.social.providers.{$name}" => $config]);
+
+        return $this;
+    }
+
+    /**
+     * Get all registered social providers.
+     *
+     * @return array<string, array{client_id: string, client_secret: string, redirect: string}>
+     */
+    public function socialProviders(): array
+    {
+        return config('auth-kit.social.providers', []);
+    }
+
+    /**
+     * Check if a social provider is registered.
+     */
+    public function hasSocialProvider(string $name): bool
+    {
+        return isset(config('auth-kit.social.providers')[$name]);
+    }
 }
