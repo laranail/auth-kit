@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
-use Simtabi\Laranail\Auth\Actions\UsernamePasswordLoginAction;
-use Simtabi\Laranail\Auth\Http\Requests\UsernamePasswordLoginRequest;
+use Simtabi\Laranail\Auth\Methods\UsernamePasswordLoginMethod;
 
 abstract class UsernamePasswordLoginController
 {
@@ -18,15 +18,16 @@ abstract class UsernamePasswordLoginController
      *
      * @throws ValidationException
      */
-    public function store(
-        UsernamePasswordLoginAction $action,
-        UsernamePasswordLoginRequest $request,
-    ): RedirectResponse {
-        $action = new UsernamePasswordLoginAction(guard: $this->guard());
+    public function store(Request $request): RedirectResponse
+    {
+        $method = new UsernamePasswordLoginMethod(guard: $this->guard());
 
-        $authenticated = $action->handle(
-            credentials: $request->credentials(),
-            remember: $request->remember(),
+        $authenticated = $method->handle(
+            credentials: [
+                'username' => $request->string(key: 'username')->toString(),
+                'password' => $request->string(key: 'password')->toString(),
+            ],
+            remember: $request->boolean(key: 'remember'),
         );
 
         if (! $authenticated) {

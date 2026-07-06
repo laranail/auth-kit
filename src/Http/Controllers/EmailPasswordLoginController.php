@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
-use Simtabi\Laranail\Auth\Actions\EmailPasswordLoginAction;
-use Simtabi\Laranail\Auth\Http\Requests\EmailPasswordLoginRequest;
+use Simtabi\Laranail\Auth\Methods\EmailPasswordLoginMethod;
 
 abstract class EmailPasswordLoginController
 {
@@ -18,15 +18,16 @@ abstract class EmailPasswordLoginController
      *
      * @throws ValidationException
      */
-    public function store(
-        EmailPasswordLoginAction $action,
-        EmailPasswordLoginRequest $request,
-    ): RedirectResponse {
-        $action = new EmailPasswordLoginAction(guard: $this->guard());
+    public function store(Request $request): RedirectResponse
+    {
+        $method = new EmailPasswordLoginMethod(guard: $this->guard());
 
-        $authenticated = $action->handle(
-            credentials: $request->credentials(),
-            remember: $request->remember(),
+        $authenticated = $method->handle(
+            credentials: [
+                'email'    => $request->string(key: 'email')->toString(),
+                'password' => $request->string(key: 'password')->toString(),
+            ],
+            remember: $request->boolean(key: 'remember'),
         );
 
         if (! $authenticated) {
