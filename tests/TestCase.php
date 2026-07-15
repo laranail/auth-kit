@@ -26,6 +26,8 @@ abstract class TestCase extends BaseTestCase
             'prefix'                  => '',
             'foreign_key_constraints' => true,
         ]);
+
+        $app['config']->set('auth.providers.users.model', \Workbench\App\Models\User::class);
     }
 
     protected function defineDatabaseMigrations(): void
