@@ -77,11 +77,11 @@ $action = app(SomeAction::class);
 
 `AuthResult` represents the outcome of any authentication attempt. It has three shapes:
 
-| Named constructor                 | Status                | Extra data                    |
-|-----------------------------------|-----------------------|-------------------------------|
-| `AuthResult::passed($user)`       | `AuthStatus::Passed`  | `user`                        |
-| `AuthResult::failed()`            | `AuthStatus::Failed`  | —                             |
-| `AuthResult::throttled($seconds)` | `AuthStatus::Throttled` | `retryAfterSeconds`         |
+| Named constructor                 | Status                  | Extra data          |
+|-----------------------------------|-------------------------|---------------------|
+| `AuthResult::passed($user)`       | `AuthStatus::Passed`    | `user`              |
+| `AuthResult::failed()`            | `AuthStatus::Failed`    | —                   |
+| `AuthResult::throttled($seconds)` | `AuthStatus::Throttled` | `retryAfterSeconds` |
 
 Check the outcome with `->isPassed()` or by switching on `->status`.
 
@@ -91,10 +91,10 @@ Actions compose. Verifying credentials and logging the user into the session are
 
 ## Available actions
 
-| Action                                                                   | Purpose                                                            |
-|--------------------------------------------------------------------------|--------------------------------------------------------------------|
-| `Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction`      | Verify email + password against a guard. Returns an `AuthResult`.  |
-| `Simtabi\Laranail\Auth\Actions\Session\LoginUserAction`                  | Log an `Authenticatable` into the guard and regenerate the session. |
+| Action                                                              | Purpose                                                             |
+|---------------------------------------------------------------------|---------------------------------------------------------------------|
+| `Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction` | Verify email + password against a guard. Returns an `AuthResult`.   |
+| `Simtabi\Laranail\Auth\Actions\Session\LoginUserAction`             | Log an `Authenticatable` into the guard and regenerate the session. |
 
 More actions (username login, rate limiting, logout, social, 2FA) will be added incrementally. See [Roadmap](#roadmap).
 
