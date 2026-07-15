@@ -1,15 +1,22 @@
 # Laravel Auth Kit
 
-A headless, framework-agnostic Laravel authentication package. No views, no frontend dependencies, no opinionated UI. Just auth logic you can wire into anything — Blade, Livewire, Inertia, API, or custom frontends.
+A headless, action-based authentication toolkit for Laravel.
 
-## Features
+No views. No routes. No controllers. No frontend assumptions.
 
-- **Headless** — no views, no routes, no frontend coupling
-- Pluggable auth methods via `AuthMethod` contract
-- Rate limiting with configurable thresholds
-- Event-driven (success, failure, throttled)
-- Multi-guard support
-- Custom guard driver
+The package ships single-purpose **Action** classes that take a typed input DTO and return a typed result. You compose them wherever you need auth — HTTP controllers, Livewire components, Artisan commands, queue jobs, or module-specific service providers in a modular monolith.
+
+## Why
+
+Most Laravel auth packages ship UI, routes, and opinions. This one ships **plain PHP objects**:
+
+- Actions have one public method: `execute()`.
+- Inputs are `readonly` DTOs. No arrays across boundaries.
+- Outputs are `readonly` result objects. No `bool`, no `?User`.
+- No exceptions for expected outcomes (wrong password, throttled). Exceptions are reserved for programmer errors.
+- Every action is injectable, mockable, and testable in isolation.
+
+This makes the package reusable across multiple modules of the same app — e.g. `user` and `admin` modules — each with its own guard.
 
 ## Requirements
 
@@ -23,365 +30,227 @@ A headless, framework-agnostic Laravel authentication package. No views, no fron
 composer require laranail/auth-kit
 ```
 
-## Conventions
+Publish the config (optional):
 
-This package follows Laravel auth conventions:
-
-| Field          | Column           |
-|----------------|------------------|
-| Email login    | `email`          |
-| Username login | `username`       |
-| Password       | `password`       |
-| Remember token | `remember_token` |
-
-## Guard Resolution
-
-Methods accept an optional guard name.
-
-If no guard is provided, the package resolves the guard from:
-
-1. `auth.defaults.guard`
-2. fallback to `web`
-
-The resolved provider and model are read from Laravel's `auth` configuration.
-
-## Architecture
-
-### AuthMethod Contract
-
-All login methods implement `Simtabi\Laranail\Auth\Contracts\AuthMethod`:
-
-```php
-interface AuthMethod
-{
-    public function getName(): string;
-    public function authenticate(Request $request): ?Authenticatable;
-    public function canHandle(Request $request): bool;
-    public function validate(Request $request): bool;
-    public function getConfig(): array;
-}
+```bash
+php artisan vendor:publish --tag=auth-kit-config
 ```
 
-### AuthManager
+## Configuration
 
-The `AuthManager` registers and resolves auth methods by name:
-
-```php
-use Simtabi\Laranail\Auth\AuthManager;
-
-$manager = app(AuthManager::class);
-
-// Methods are auto-registered by the service provider:
-// - 'email'    => EmailPasswordLoginMethod
-// - 'username' => UsernamePasswordLoginMethod
-
-// Register a custom method
-$manager->registerMethod('otp', OtpLoginMethod::class);
-
-// Resolve a method
-$method = $manager->method('email');
-
-// Auto-detect method from request
-$method = $manager->resolveMethodForRequest($request);
-```
-
-### LaranailGuard
-
-A custom guard driver (`laranail`) that dispatches to registered `AuthMethod` implementations:
-
-```php
-// In config/auth.php
-'guards' => [
-    'web' => [
-        'driver' => 'laranail',
-        'provider' => 'users',
-    ],
-],
-
-// Use with attemptWith()
-auth()->guard('web')->attemptWith('email', $credentials);
-```
-
-## Runtime Components
-
-### Methods
-
-- `EmailPasswordLoginMethod` — implements `AuthMethod`, provides `handle()` with rate limiting
-- `UsernamePasswordLoginMethod` — implements `AuthMethod`, provides `handle()` with rate limiting
-
-Both methods support:
-
-- guard-aware authentication
-- rate limiting (configurable `maxAttempts` / `decaySeconds`)
-- success, failure, and throttled events
-- `canHandle()` for automatic method detection via `AuthManager`
-
-### AuthManager
-
-- `registerMethod(name, class)` — register a method by name
-- `method(name)` — resolve a method instance
-- `methods()` — list registered method names
-- `hasMethod(name)` — check if a method is registered
-- `resolveMethodForRequest(request)` — auto-detect the method for a request
-
-### LaranailGuard
-
-- Extends `SessionGuard`, implements `StatefulGuard`
-- `attemptWith(method, credentials, remember)` — authenticate via a named method
-- Fires `Authenticated` and `Failed` events
-
-### Events
-
-| Action         | Events                                                                                          |
-|----------------|-------------------------------------------------------------------------------------------------|
-| Email login    | `EmailPasswordLoginSuccess`, `EmailPasswordLoginFailed`, `EmailPasswordLoginThrottled`          |
-| Username login | `UsernamePasswordLoginSuccess`, `UsernamePasswordLoginFailed`, `UsernamePasswordLoginThrottled` |
-
-## Included Test Support
-
-The package includes a sample `User` model and `UserFactory` for testing and workbench usage.
-
-## Usage
-
-### Email/Password Login
-
-```php
-<?php
-
-use Simtabi\Laranail\Auth\Methods\EmailPasswordLoginMethod;
-
-// Default guard
-$method = new EmailPasswordLoginMethod();
-$method->handle(
-    credentials: ['email' => 'user@example.com', 'password' => 'secret'],
-    remember: true,
-);
-
-// Custom guard
-$method = new EmailPasswordLoginMethod(guard: 'admin');
-$method->handle(
-    credentials: ['email' => 'admin@example.com', 'password' => 'secret'],
-);
-```
-
-### Username/Password Login
-
-```php
-<?php
-
-use Simtabi\Laranail\Auth\Methods\UsernamePasswordLoginMethod;
-
-// Default guard
-$method = new UsernamePasswordLoginMethod();
-$method->handle(
-    credentials: ['username' => 'johndoe', 'password' => 'secret'],
-    remember: true,
-);
-
-// Custom guard
-$method = new UsernamePasswordLoginMethod(guard: 'admin');
-$method->handle(
-    credentials: ['username' => 'admin_user', 'password' => 'secret'],
-);
-```
-
-### Custom Guard Setup
-
-First, register the guard and provider in `config/auth.php`:
+`config/auth-kit.php`:
 
 ```php
 return [
-    'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-
-        'admin' => [
-            'driver' => 'laranail',
-            'provider' => 'admins',
-        ],
-    ],
-
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class,
-        ],
-
-        'admins' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
-        ],
-    ],
+    // The default guard used when an action is invoked without an explicit guard.
+    'guard' => env('AUTH_KIT_GUARD', 'web'),
 ];
 ```
 
-Then use it in your controller:
+Guards and user providers are defined the standard Laravel way in `config/auth.php`. This package does not ship a custom guard driver — it delegates to whatever guards you configure.
+
+## Concepts
+
+### Actions
+
+An action is a single-purpose class with one public method:
 
 ```php
-<?php
-
-namespace App\Http\Controllers\Auth;
-
-use Simtabi\Laranail\Auth\Http\Controllers\EmailPasswordLoginController;
-
-class AdminLoginController extends EmailPasswordLoginController
+final readonly class SomeAction
 {
-    protected function guard(): ?string
+    public function __construct(/* injected deps */) {}
+
+    public function execute(SomeInput $input): SomeResult
     {
-        return 'admin';
+        // one thing, well
     }
 }
 ```
 
-Or use the Method directly:
+Resolve actions from the container so their dependencies are wired for you:
 
 ```php
-<?php
-
-use Simtabi\Laranail\Auth\Methods\EmailPasswordLoginMethod;
-
-$method = new EmailPasswordLoginMethod(guard: 'admin');
-$method->handle(credentials: ['email' => '...', 'password' => '...']);
+$action = app(SomeAction::class);
 ```
 
-### AuthManager Usage
+### Result object
+
+`AuthResult` represents the outcome of any authentication attempt. It has three shapes:
+
+| Named constructor                 | Status                  | Extra data          |
+|-----------------------------------|-------------------------|---------------------|
+| `AuthResult::passed($user)`       | `AuthStatus::Passed`    | `user`              |
+| `AuthResult::failed()`            | `AuthStatus::Failed`    | —                   |
+| `AuthResult::throttled($seconds)` | `AuthStatus::Throttled` | `retryAfterSeconds` |
+
+Check the outcome with `->isPassed()` or by switching on `->status`.
+
+### Composition
+
+Actions compose. Verifying credentials and logging the user into the session are **separate actions** so headless callers (API, mobile, queue jobs) can skip session concerns entirely, while session-based callers chain them together.
+
+## Available actions
+
+| Action                                                              | Purpose                                                             |
+|---------------------------------------------------------------------|---------------------------------------------------------------------|
+| `Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction` | Verify email + password against a guard. Returns an `AuthResult`.   |
+| `Simtabi\Laranail\Auth\Actions\Session\LoginUserAction`             | Log an `Authenticatable` into the guard and regenerate the session. |
+
+More actions (username login, rate limiting, logout, social, 2FA) will be added incrementally. See [Roadmap](#roadmap).
+
+## Usage
+
+### Headless password verification (API / stateless)
 
 ```php
-<?php
+use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
+use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginInput;
+use Simtabi\Laranail\Auth\Results\AuthStatus;
 
-use Simtabi\Laranail\Auth\AuthManager;
+$result = app(AttemptPasswordLoginAction::class)->execute(
+    new AttemptPasswordLoginInput(
+        email: 'ada@example.com',
+        password: 'secret',
+    ),
+);
 
-$manager = app(AuthManager::class);
-
-// List registered methods
-$manager->methods(); // ['email', 'username']
-
-// Resolve a method
-$method = $manager->method('email');
-
-// Auto-detect method from request fields
-$method = $manager->resolveMethodForRequest($request);
-
-// Register a custom method
-$manager->registerMethod('otp', OtpLoginMethod::class);
+return match ($result->status) {
+    AuthStatus::Passed    => response()->json(['user' => $result->user]),
+    AuthStatus::Failed    => response()->json(['message' => 'Invalid credentials'], 422),
+    AuthStatus::Throttled => response()->json(
+        ['message' => "Try again in {$result->retryAfterSeconds}s"],
+        429,
+    ),
+};
 ```
 
-### Custom Guard Driver
+### Session-based login (web)
 
-Use the `laranail` driver to dispatch to `AuthMethod` implementations via the guard:
+Chain credential verification with a session login:
 
 ```php
-// config/auth.php
+use Illuminate\Http\Request;
+use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
+use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginInput;
+use Simtabi\Laranail\Auth\Actions\Session\LoginUserAction;
+
+public function store(
+    Request $request,
+    AttemptPasswordLoginAction $attempt,
+    LoginUserAction $login,
+) {
+    $result = $attempt->execute(new AttemptPasswordLoginInput(
+        email:    $request->string('email')->toString(),
+        password: $request->string('password')->toString(),
+        remember: $request->boolean('remember'),
+    ));
+
+    if (! $result->isPassed()) {
+        return back()->withErrors(['email' => 'Invalid credentials']);
+    }
+
+    $login->execute($result->user, remember: $request->boolean('remember'));
+
+    return redirect()->intended();
+}
+```
+
+### Per-module usage (admin vs user)
+
+The same actions serve any number of modules. Pass the target guard on the input DTO:
+
+```php
+// In the admin module
+$result = app(AttemptPasswordLoginAction::class)->execute(
+    new AttemptPasswordLoginInput(
+        email:    $email,
+        password: $password,
+        guard:    'admin',
+    ),
+);
+
+if ($result->isPassed()) {
+    app(LoginUserAction::class)->execute($result->user, guard: 'admin');
+}
+```
+
+Define the `admin` guard the standard Laravel way in `config/auth.php`:
+
+```php
 'guards' => [
-    'web' => [
-        'driver' => 'laranail',
-        'provider' => 'users',
-    ],
+    'web'   => ['driver' => 'session', 'provider' => 'users'],
+    'admin' => ['driver' => 'session', 'provider' => 'admins'],
+],
+
+'providers' => [
+    'users'  => ['driver' => 'eloquent', 'model' => App\Models\User::class],
+    'admins' => ['driver' => 'eloquent', 'model' => App\Models\Admin::class],
 ],
 ```
 
-```php
-// In your controller or anywhere
-auth()->guard('web')->attemptWith('email', [
-    'email' => 'user@example.com',
-    'password' => 'secret',
-], remember: true);
-```
+Each module can wrap the actions in a thin controller of its own — the package deliberately does not ship one.
 
-### Implementing a Custom AuthMethod
+### Using actions from a queue job
+
+Because actions don't touch `Request` or `Response`, they run anywhere:
 
 ```php
-<?php
-
-namespace App\Auth\Methods;
-
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Contracts\AuthMethod;
-
-class OtpLoginMethod implements AuthMethod
+final class VerifyImportedCredentialsJob implements ShouldQueue
 {
-    public function getName(): string
+    public function __construct(
+        public string $email,
+        public string $password,
+    ) {}
+
+    public function handle(AttemptPasswordLoginAction $attempt): void
     {
-        return 'otp';
-    }
+        $result = $attempt->execute(new AttemptPasswordLoginInput(
+            email:    $this->email,
+            password: $this->password,
+        ));
 
-    public function canHandle(Request $request): bool
-    {
-        return $request->has(['email', 'otp_code']);
-    }
-
-    public function validate(Request $request): bool
-    {
-        $request->validate([
-            'email' => ['required', 'email'],
-            'otp_code' => ['required', 'string', 'digits:6'],
-        ]);
-
-        return true;
-    }
-
-    public function authenticate(Request $request): ?Authenticatable
-    {
-        $user = User::where('email', $request->input('email'))->first();
-
-        if (! $user || ! $user->verifyOtp($request->input('otp_code'))) {
-            return null;
-        }
-
-        return $user;
-    }
-
-    public function getConfig(): array
-    {
-        return [];
+        // Do something with $result->status …
     }
 }
 ```
 
-Register it in a service provider:
+## Testing your integration
+
+Actions are trivial to mock because they have one method:
 
 ```php
-<?php
+use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
+use Simtabi\Laranail\Auth\Results\AuthResult;
 
-use App\Auth\Methods\OtpLoginMethod;
-use Simtabi\Laranail\Auth\AuthManager;
+it('shows an error when credentials are invalid', function () {
+    $this->mock(AttemptPasswordLoginAction::class)
+        ->shouldReceive('execute')
+        ->once()
+        ->andReturn(AuthResult::failed());
 
-// In boot()
-app(AuthManager::class)->registerMethod('otp', OtpLoginMethod::class);
-```
-
-### Listening to Events
-
-```php
-<?php
-
-use Illuminate\Support\Facades\Event;
-use Simtabi\Laranail\Auth\Events\EmailPasswordLoginSuccess;
-use Simtabi\Laranail\Auth\Events\EmailPasswordLoginFailed;
-use Simtabi\Laranail\Auth\Events\EmailPasswordLoginThrottled;
-
-Event::listen(EmailPasswordLoginSuccess::class, function ($event) {
-    Log::info("Login success: {$event->email} via {$event->guard}");
-});
-
-Event::listen(EmailPasswordLoginFailed::class, function ($event) {
-    Log::warning("Login failed: {$event->email} via {$event->guard}");
-});
-
-Event::listen(EmailPasswordLoginThrottled::class, function ($event) {
-    Log::critical("Login throttled: {$event->email} via {$event->guard}, retry in {$event->seconds}s");
+    $this->post('/login', ['email' => 'x@y.z', 'password' => 'bad'])
+        ->assertSessionHasErrors('email');
 });
 ```
 
-## Testing
+## Running the package's own tests
 
 ```bash
 composer test
 ```
 
+## Roadmap
+
+The package is intentionally minimal today. Future action additions:
+
+- Rate limiting (`EnforceLoginRateLimitAction`)
+- Username-based login (`AttemptUsernameLoginAction`)
+- Logout (`LogoutUserAction`)
+- Social login (redirect + callback actions)
+- 2FA / MFA (challenge issue + verify actions with TOTP, OTP, recovery codes)
+- Optional HTTP companion package (`laranail/auth-kit-http`) with controllers and route macros
+
 ## License
 
 MIT
+```
