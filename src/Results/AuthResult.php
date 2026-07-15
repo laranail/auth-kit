@@ -8,8 +8,8 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 enum AuthStatus: string
 {
-    case Passed    = 'passed';
-    case Failed    = 'failed';
+    case Passed = 'passed';
+    case Failed = 'failed';
     case Throttled = 'throttled';
 }
 

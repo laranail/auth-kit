@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace Workbench\App\Models;
 
+use Illuminate\Notifications\Notifiable;
+use Workbench\Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     use HasFactory;
     use Notifiable;
-
-    protected static function newFactory()
-    {
-        return \Workbench\Database\Factories\UserFactory::new();
-    }
 
     protected $fillable = [
         'name',
@@ -28,6 +24,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
+    }
 
     protected function casts(): array
     {

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Actions\Password;
 
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Simtabi\Laranail\Auth\Results\AuthResult;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 
 final readonly class AttemptPasswordLoginAction
 {

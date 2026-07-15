@@ -6,27 +6,27 @@ use Simtabi\Laranail\Auth\Results\AuthResult;
 use Simtabi\Laranail\Auth\Results\AuthStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-it('creates a passed result', function () {
+it(description: 'creates a passed result', closure: function () {
     $user = Mockery::mock(Authenticatable::class);
 
-    $result = AuthResult::passed($user);
+    $result = AuthResult::passed(user: $user);
 
-    expect($result->isPassed())->toBeTrue()
-        ->and($result->status)->toBe(AuthStatus::Passed)
-        ->and($result->user)->toBe($user);
+    expect(value: $result->isPassed())->toBeTrue()
+        ->and(value: $result->status)->toBe(expected: AuthStatus::Passed)
+        ->and(value: $result->user)->toBe(expected: $user);
 });
 
-it('creates a failed result', function () {
+it(description: 'creates a failed result', closure: function () {
     $result = AuthResult::failed();
 
-    expect($result->isPassed())->toBeFalse()
-        ->and($result->status)->toBe(AuthStatus::Failed)
-        ->and($result->user)->toBeNull();
+    expect(value: $result->isPassed())->toBeFalse()
+        ->and(value: $result->status)->toBe(expected: AuthStatus::Failed)
+        ->and(value: $result->user)->toBeNull();
 });
 
-it('creates a throttled result with retry seconds', function () {
-    $result = AuthResult::throttled(30);
+it(description: 'creates a throttled result with retry seconds', closure: function () {
+    $result = AuthResult::throttled(retryAfterSeconds: 30);
 
-    expect($result->status)->toBe(AuthStatus::Throttled)
-        ->and($result->retryAfterSeconds)->toBe(30);
+    expect(value: $result->status)->toBe(expected: AuthStatus::Throttled)
+        ->and(value: $result->retryAfterSeconds)->toBe(expected: 30);
 });

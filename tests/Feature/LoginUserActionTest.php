@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Workbench\App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Simtabi\Laranail\Auth\Actions\Session\LoginUserAction;
-use Workbench\App\Models\User;
 
 uses(RefreshDatabase::class);
 
