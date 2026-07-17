@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginInput;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
+use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
+use Simtabi\Laranail\Auth\Actions\AttemptEmailPasswordLogin;
 
 uses(RefreshDatabase::class);
 
@@ -15,9 +15,9 @@ it('returns passed when credentials are valid', function () {
         'password' => bcrypt('secret'),
     ]);
 
-    $action = app(AttemptPasswordLoginAction::class);
+    $action = app(AttemptEmailPasswordLogin::class);
 
-    $result = $action->execute(new AttemptPasswordLoginInput(
+    $result = $action->execute(new AttemptEmailPasswordLoginInput(
         email: 'ada@example.com',
         password: 'secret',
     ));
@@ -32,9 +32,9 @@ it('returns failed when credentials are wrong', function () {
         'password' => bcrypt('secret'),
     ]);
 
-    $action = app(AttemptPasswordLoginAction::class);
+    $action = app(AttemptEmailPasswordLogin::class);
 
-    $result = $action->execute(new AttemptPasswordLoginInput(
+    $result = $action->execute(new AttemptEmailPasswordLoginInput(
         email: 'ada@example.com',
         password: 'wrong',
     ));

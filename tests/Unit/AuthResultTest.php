@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Simtabi\Laranail\Auth\Results\AuthResult;
-use Simtabi\Laranail\Auth\Results\AuthStatus;
+use Simtabi\Laranail\Auth\Enums\AuthStatus;
+use Simtabi\Laranail\Auth\Support\AuthResult;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 it(description: 'creates a passed result', closure: function () {

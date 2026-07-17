@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Simtabi\Laranail\Auth\Actions\Password;
+namespace Simtabi\Laranail\Auth\Actions;
 
-use Simtabi\Laranail\Auth\Results\AuthResult;
+use Simtabi\Laranail\Auth\Support\AuthResult;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
 
-final readonly class AttemptPasswordLoginAction
+class AttemptEmailPasswordLogin
 {
     public function __construct(
         private AuthFactory $auth,
     ) {
     }
 
-    public function execute(AttemptPasswordLoginInput $input): AuthResult
+    public function execute(AttemptEmailPasswordLoginInput $input): AuthResult
     {
         $guardName = $input->guard ?? config('auth-kit.guard');
         $guard = $this->auth->guard($guardName);

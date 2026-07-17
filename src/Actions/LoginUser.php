@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simtabi\Laranail\Auth\Actions\Session;
+namespace Simtabi\Laranail\Auth\Actions;
 
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 
-final readonly class LoginUserAction
+class LoginUser
 {
     public function __construct(
         private AuthFactory $auth,
