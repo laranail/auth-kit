@@ -94,6 +94,7 @@ Actions compose. Verifying credentials and logging the user into the session are
 | Action                                                              | Purpose                                                             |
 |---------------------------------------------------------------------|---------------------------------------------------------------------|
 | `Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction` | Verify email + password against a guard. Returns an `AuthResult`.   |
+| `Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsAction`        | Check whether an email address is registered. Returns `bool`.       |
 | `Simtabi\Laranail\Auth\Actions\Session\LoginUserAction`             | Log an `Authenticatable` into the guard and regenerate the session. |
 
 More actions (username login, rate limiting, logout, social, 2FA) will be added incrementally. See [Roadmap](#roadmap).
@@ -154,6 +155,30 @@ public function store(
     return redirect()->intended();
 }
 ```
+
+### Check email existence
+
+Use `CheckEmailExistsAction` to determine whether an email address is registered.
+
+```php
+use Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsAction;
+use Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsInput;
+
+$action = app(CheckEmailExistsAction::class);
+
+$exists = $action->execute(new CheckEmailExistsInput(
+    email: 'user@example.com',
+));
+
+if ($exists) {
+    // proceed with password reset, login prompt, etc.
+}
+```
+
+| Property | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `email` | `string` | yes | — | The email address to look up. |
+| `guard` | `string\|null` | no | `null` | Auth guard to use. Falls back to `auth-kit.guard` config value. |
 
 ### Per-module usage (admin vs user)
 
@@ -253,4 +278,3 @@ The package is intentionally minimal today. Future action additions:
 ## License
 
 MIT
-```
