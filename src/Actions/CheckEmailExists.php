@@ -7,7 +7,7 @@ namespace Simtabi\Laranail\Auth\Actions;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
 
-class CheckEmailExistsAction
+class CheckEmailExists
 {
     public function __construct(
         private AuthFactory $auth,
