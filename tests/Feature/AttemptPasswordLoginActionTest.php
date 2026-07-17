@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginInput;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
+use Simtabi\Laranail\Auth\Dtos\AttemptPasswordLoginInput;
+use Simtabi\Laranail\Auth\Actions\AttemptPasswordLoginAction;
 
 uses(RefreshDatabase::class);
 

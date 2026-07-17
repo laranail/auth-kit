@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Simtabi\Laranail\Auth\Actions\Email;
+namespace Simtabi\Laranail\Auth\Dtos;
 
-final readonly class CheckEmailExistsInput
+class CheckEmailExistsInput
 {
     public function __construct(
         public string $email,

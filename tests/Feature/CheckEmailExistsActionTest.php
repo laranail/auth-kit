@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsInput;
-use Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsAction;
+use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
+use Simtabi\Laranail\Auth\Actions\CheckEmailExistsAction;
 
 uses(RefreshDatabase::class);
 

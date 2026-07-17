@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Simtabi\Laranail\Auth\Actions\Password;
+namespace Simtabi\Laranail\Auth\Actions;
 
-use Simtabi\Laranail\Auth\Results\AuthResult;
+use Simtabi\Laranail\Auth\Support\AuthResult;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Simtabi\Laranail\Auth\Dtos\AttemptPasswordLoginInput;
 
-final readonly class AttemptPasswordLoginAction
+class AttemptPasswordLoginAction
 {
     public function __construct(
         private AuthFactory $auth,

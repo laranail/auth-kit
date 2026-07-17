@@ -2,18 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Simtabi\Laranail\Auth\Results;
+namespace Simtabi\Laranail\Auth\Support;
 
+use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-enum AuthStatus: string
-{
-    case Passed = 'passed';
-    case Failed = 'failed';
-    case Throttled = 'throttled';
-}
-
-final readonly class AuthResult
+class AuthResult
 {
     private function __construct(
         public AuthStatus $status,
@@ -24,17 +18,17 @@ final readonly class AuthResult
 
     public static function passed(Authenticatable $user): self
     {
-        return new self(AuthStatus::Passed, user: $user);
+        return new self(status: AuthStatus::Passed, user: $user);
     }
 
     public static function failed(): self
     {
-        return new self(AuthStatus::Failed);
+        return new self(status: AuthStatus::Failed);
     }
 
     public static function throttled(int $retryAfterSeconds): self
     {
-        return new self(AuthStatus::Throttled, retryAfterSeconds: $retryAfterSeconds);
+        return new self(status: AuthStatus::Throttled, retryAfterSeconds: $retryAfterSeconds);
     }
 
     public function isPassed(): bool

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Simtabi\Laranail\Auth\Actions\Session\LoginUserAction;
+use Simtabi\Laranail\Auth\Actions\LoginUserAction;
 
 uses(RefreshDatabase::class);
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Simtabi\Laranail\Auth\Actions\Password;
+namespace Simtabi\Laranail\Auth\Dtos;
 
-final readonly class AttemptPasswordLoginInput
+class AttemptPasswordLoginInput
 {
     public function __construct(
         public string $email,
