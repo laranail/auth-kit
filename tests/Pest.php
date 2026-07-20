@@ -3,5 +3,6 @@
 declare(strict_types=1);
 
 use Simtabi\Laranail\Auth\Tests\TestCase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
-uses(TestCase::class)->in('Feature', 'Unit');
+uses(TestCase::class, LazilyRefreshDatabase::class)->in('Feature', 'Unit');
