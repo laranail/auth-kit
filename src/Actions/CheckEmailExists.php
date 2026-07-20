@@ -6,8 +6,9 @@ namespace Simtabi\Laranail\Auth\Actions;
 
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
+use Simtabi\Laranail\Auth\Contracts\CheckEmailExistsInterface;
 
-class CheckEmailExists
+class CheckEmailExists implements CheckEmailExistsInterface
 {
     public function __construct(
         private AuthFactory $auth,
@@ -16,9 +17,7 @@ class CheckEmailExists
 
     public function execute(CheckEmailExistsInput $input): bool
     {
-        $guardName = $input->guard ?? config('auth-kit.guard');
-
-        $provider = $this->auth->guard($guardName)->getProvider();
+        $provider = $this->auth->guard($input->guard)->getProvider();
 
         return $provider->retrieveByCredentials(['email' => $input->email]) !== null;
     }
