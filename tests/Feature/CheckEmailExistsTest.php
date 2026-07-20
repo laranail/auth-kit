@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
 use Simtabi\Laranail\Auth\Actions\CheckEmailExists;
+use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
 
 uses(RefreshDatabase::class);
 
@@ -15,14 +15,14 @@ it('returns true when the email exists', function (): void {
     ]);
 
     $action = app(CheckEmailExists::class);
-    $input = new CheckEmailExistsInput(email: 'existing@example.com');
+    $input = new CheckEmailExistsInput(email: 'existing@example.com', guard: 'web');
 
     expect($action->execute($input))->toBeTrue();
 });
 
 it('returns false when the email does not exist', function (): void {
     $action = app(CheckEmailExists::class);
-    $input = new CheckEmailExistsInput(email: 'nobody@example.com');
+    $input = new CheckEmailExistsInput(email: 'nobody@example.com', guard: 'web');
 
     expect($action->execute($input))->toBeFalse();
 });

@@ -9,8 +9,8 @@ class AttemptEmailPasswordLoginInput
     public function __construct(
         public string $email,
         public string $password,
+        public string $guard,
         public bool $remember = false,
-        public ?string $guard = null,
     ) {
     }
 }

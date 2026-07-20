@@ -7,8 +7,9 @@ namespace Simtabi\Laranail\Auth\Actions;
 use Simtabi\Laranail\Auth\Support\AuthResult;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
+use Simtabi\Laranail\Auth\Contracts\AttemptEmailPasswordLoginInterface;
 
-class AttemptEmailPasswordLogin
+class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
 {
     public function __construct(
         private AuthFactory $auth,
@@ -17,8 +18,7 @@ class AttemptEmailPasswordLogin
 
     public function execute(AttemptEmailPasswordLoginInput $input): AuthResult
     {
-        $guardName = $input->guard ?? config('auth-kit.guard');
-        $guard = $this->auth->guard($guardName);
+        $guard = $this->auth->guard($input->guard);
 
         $ok = $guard->attempt(
             ['email' => $input->email, 'password' => $input->password],
