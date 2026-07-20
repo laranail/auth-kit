@@ -7,17 +7,17 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
-use Simtabi\Laranail\Auth\Actions\AttemptEmailPasswordLogin;
-use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
-use Simtabi\Laranail\Auth\Http\Requests\AttemptEmailPasswordLoginRequest;
+use Simtabi\Laranail\Auth\Actions\AttemptUsernameLogin;
+use Simtabi\Laranail\Auth\Dtos\AttemptUsernameLoginInput;
+use Simtabi\Laranail\Auth\Http\Requests\AttemptUsernameLoginRequest;
 
-abstract class AbstractAttemptEmailPasswordLoginController extends AbstractAuthController
+abstract class AbstractAttemptUsernameLoginController extends AbstractAuthController
 {
-    public function __invoke(AttemptEmailPasswordLoginRequest $request, AttemptEmailPasswordLogin $action): mixed
+    public function __invoke(AttemptUsernameLoginRequest $request, AttemptUsernameLogin $action): mixed
     {
         $result = $action->execute(
-            input: new AttemptEmailPasswordLoginInput(
-                email: $request->validated('email'),
+            input: new AttemptUsernameLoginInput(
+                username: $request->validated('username'),
                 password: $request->validated('password'),
                 remember: (bool) $request->validated('remember', false),
                 guard: $this->guard(),

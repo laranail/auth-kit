@@ -3,13 +3,10 @@
 declare(strict_types=1);
 
 use Workbench\App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Simtabi\Laranail\Auth\Actions\CheckEmailExists;
 use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
 
-uses(RefreshDatabase::class);
-
-it('returns true when the email exists', function (): void {
+it(description: 'returns true when the email exists', closure: function (): void {
     User::factory()->create([
         'email' => 'existing@example.com',
     ]);
@@ -20,14 +17,14 @@ it('returns true when the email exists', function (): void {
     expect($action->execute($input))->toBeTrue();
 });
 
-it('returns false when the email does not exist', function (): void {
+it(description: 'returns false when the email does not exist', closure: function (): void {
     $action = app(CheckEmailExists::class);
     $input = new CheckEmailExistsInput(email: 'nobody@example.com', guard: 'web');
 
     expect($action->execute($input))->toBeFalse();
 });
 
-it('respects a custom guard', function (): void {
+it(description: 'respects a custom guard', closure: function (): void {
     User::factory()->create([
         'email' => 'guardtest@example.com',
     ]);

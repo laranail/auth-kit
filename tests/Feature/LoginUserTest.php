@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Simtabi\Laranail\Auth\Actions\LoginUser;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
-it('logs the user into the guard', function () {
+it(description: 'logs the user into the guard', closure: function () {
     $user = User::factory()->create();
 
-    app(LoginUser::class)->execute($user, guard: 'web');
+    app(abstract: LoginUser::class)->execute(user: $user);
 
-    expect(auth()->check())->toBeTrue()
-        ->and(auth()->id())->toBe($user->getAuthIdentifier());
+    expect(value: auth()->check())->toBeTrue()
+        ->and(value: auth()->id())->toBe(expected: $user->getAuthIdentifier());
 });

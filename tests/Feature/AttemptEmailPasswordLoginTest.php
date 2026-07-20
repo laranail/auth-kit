@@ -3,13 +3,10 @@
 declare(strict_types=1);
 
 use Workbench\App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Simtabi\Laranail\Auth\Actions\AttemptEmailPasswordLogin;
 use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
 
-uses(RefreshDatabase::class);
-
-it('returns passed when credentials are valid', function () {
+it(description: 'returns passed when credentials are valid', closure: function () {
     $user = User::factory()->create([
         'email'    => 'ada@example.com',
         'password' => bcrypt('secret'),
@@ -27,7 +24,7 @@ it('returns passed when credentials are valid', function () {
         ->and($result->user?->getAuthIdentifier())->toBe($user->getAuthIdentifier());
 });
 
-it('returns failed when credentials are wrong', function () {
+it(description: 'returns failed when credentials are wrong', closure: function () {
     User::factory()->create([
         'email'    => 'ada@example.com',
         'password' => bcrypt('secret'),

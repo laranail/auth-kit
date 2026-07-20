@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Actions\CheckEmailExists;
-use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
-use Simtabi\Laranail\Auth\Http\Requests\CheckEmailExistsRequest;
+use Simtabi\Laranail\Auth\Actions\CheckUsernameExists;
+use Simtabi\Laranail\Auth\Dtos\CheckUsernameExistsInput;
+use Simtabi\Laranail\Auth\Http\Requests\CheckUsernameExistsRequest;
 
-abstract class AbstractCheckEmailExistsController extends AbstractAuthController
+abstract class AbstractCheckUsernameExistsController extends AbstractAuthController
 {
-    public function __invoke(CheckEmailExistsRequest $request, CheckEmailExists $action): mixed
+    public function __invoke(CheckUsernameExistsRequest $request, CheckUsernameExists $action): mixed
     {
         $exists = $action->execute(
-            input: new CheckEmailExistsInput(
-                email: $request->validated('email'),
+            input: new CheckUsernameExistsInput(
+                username: $request->validated(key: 'username'),
                 guard: $this->guard(),
             )
         );

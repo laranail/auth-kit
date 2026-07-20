@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth;
 
 use Illuminate\Support\ServiceProvider;
-use Simtabi\Laranail\Auth\Contracts\LoginUserInterface;
-use Simtabi\Laranail\Auth\Contracts\FindUserByEmailInterface;
-use Simtabi\Laranail\Auth\Contracts\CheckEmailExistsInterface;
-use Simtabi\Laranail\Auth\Contracts\AttemptEmailPasswordLoginInterface;
 
 class AuthKitServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/auth-kit.php', 'auth-kit');
+        $this->mergeConfigFrom(path: __DIR__ . '/../config/auth-kit.php', key: 'auth-kit');
 
-        $this->app->bind(AttemptEmailPasswordLoginInterface::class, Actions\AttemptEmailPasswordLogin::class);
-        $this->app->bind(CheckEmailExistsInterface::class, Actions\CheckEmailExists::class);
-        $this->app->bind(FindUserByEmailInterface::class, Actions\FindUserByEmail::class);
-        $this->app->bind(LoginUserInterface::class, Actions\LoginUser::class);
+        $this->app->bind(abstract: Contracts\AttemptEmailPasswordLoginInterface::class, concrete: Actions\AttemptEmailPasswordLogin::class);
+        $this->app->bind(abstract: Contracts\CheckEmailExistsInterface::class, concrete: Actions\CheckEmailExists::class);
+        $this->app->bind(abstract: Contracts\FindUserByEmailInterface::class, concrete: Actions\FindUserByEmail::class);
+        $this->app->bind(abstract: Contracts\LoginUserInterface::class, concrete: Actions\LoginUser::class);
+
+        $this->app->bind(abstract: Contracts\AttemptUsernameLoginInterface::class, concrete: Actions\AttemptUsernameLogin::class);
+        $this->app->bind(abstract: Contracts\FindUserByUsernameInterface::class, concrete: Actions\FindUserByUsername::class);
+        $this->app->bind(abstract: Contracts\CheckUsernameExistsInterface::class, concrete: Actions\CheckUsernameExists::class);
     }
 
     public function boot(): void
@@ -28,14 +28,9 @@ class AuthKitServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->publishes([
-            __DIR__ . '/../config/auth-kit.php' => config_path('auth-kit.php'),
-        ], 'auth-kit-config');
-
-        $this->publishes([
-            __DIR__ . '/../database/migrations' => database_path('migrations'),
-        ], 'auth-kit-migrations');
-
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->publishes(
+            paths: [__DIR__ . '/../config/auth-kit.php' => config_path('auth-kit.php')],
+            groups: 'auth-kit-config'
+        );
     }
 }
