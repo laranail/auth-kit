@@ -219,7 +219,59 @@ Define the `admin` guard the standard Laravel way in `config/auth.php`:
 ],
 ```
 
-Each module can wrap the actions in a thin controller of its own — the package deliberately does not ship one.
+Each module can wrap the actions in a thin controller of its own — the package deliberately does not ship concrete controllers.
+
+### Abstract controllers
+
+The package ships abstract controllers that handle JSON responses and delegate non-JSON responses to overridable methods. Extend them to wire up your own routes:
+
+| Abstract Controller | Delegates To | Overridable Methods |
+|---------------------|-------------|---------------------|
+| `AbstractAttemptEmailPasswordLoginController` | `AttemptEmailPasswordLogin` | `passed()`, `failed()`, `throttled()` |
+| `AbstractAttemptUsernameLoginController` | `AttemptUsernameLogin` | `passed()`, `failed()`, `throttled()` |
+| `AbstractCheckEmailExistsController` | `CheckEmailExists` | `respond()` |
+| `AbstractCheckUsernameExistsController` | `CheckUsernameExists` | `respond()` |
+| `AbstractLogoutController` | `LogoutUser` | `loggedOut()` |
+
+All extend `AbstractAuthController`, which provides a `guard()` helper reading from `config('auth-kit.guard')`.
+
+**Example — login controller:**
+
+```php
+use Illuminate\Http\Request;
+use Simtabi\Laranail\Auth\Http\Controllers\AbstractAttemptEmailPasswordLoginController;
+use Simtabi\Laranail\Auth\Support\AuthResult;
+
+class LoginController extends AbstractAttemptEmailPasswordLoginController
+{
+    protected function passed(Request $request, AuthResult $result): mixed
+    {
+        return redirect()->intended('/dashboard');
+    }
+
+    protected function failed(Request $request, AuthResult $result): mixed
+    {
+        return back()->withErrors(['email' => 'Invalid credentials.']);
+    }
+}
+```
+
+**Example — logout controller:**
+
+```php
+use Illuminate\Http\Request;
+use Simtabi\Laranail\Auth\Http\Controllers\AbstractLogoutController;
+
+class LogoutController extends AbstractLogoutController
+{
+    protected function loggedOut(Request $request): mixed
+    {
+        return redirect('/');
+    }
+}
+```
+
+For JSON requests (`Accept: application/json` or `$request->expectsJson()`), the abstract controllers return structured JSON automatically — no override needed.
 
 ### Using actions from a queue job
 
