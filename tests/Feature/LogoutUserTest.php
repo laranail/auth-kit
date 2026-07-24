@@ -9,20 +9,20 @@ use Simtabi\Laranail\Auth\Actions\LogoutUser;
 it(description: 'logs the user out of the guard', closure: function () {
     $user = User::factory()->create();
 
-    app(abstract: LoginUser::class)->execute(user: $user);
+    app(abstract: LoginUser::class)->execute(user: $user, guard: 'web');
     expect(value: auth()->check())->toBeTrue();
 
-    app(abstract: LogoutUser::class)->execute();
+    app(abstract: LogoutUser::class)->execute(guard: 'web');
     expect(value: auth()->check())->toBeFalse();
 });
 
 it(description: 'invalidates the session', closure: function () {
     $user = User::factory()->create();
 
-    app(abstract: LoginUser::class)->execute(user: $user);
+    app(abstract: LoginUser::class)->execute(user: $user, guard: 'web');
     $oldSessionId = session()->getId();
 
-    app(abstract: LogoutUser::class)->execute();
+    app(abstract: LogoutUser::class)->execute(guard: 'web');
 
     expect(value: session()->getId())->not->toBe($oldSessionId);
 });

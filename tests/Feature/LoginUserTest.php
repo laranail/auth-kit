@@ -8,7 +8,7 @@ use Simtabi\Laranail\Auth\Actions\LoginUser;
 it(description: 'logs the user into the guard', closure: function () {
     $user = User::factory()->create();
 
-    app(abstract: LoginUser::class)->execute(user: $user);
+    app(abstract: LoginUser::class)->execute(user: $user, guard: 'web');
 
     expect(value: auth()->check())->toBeTrue()
         ->and(value: auth()->id())->toBe(expected: $user->getAuthIdentifier());

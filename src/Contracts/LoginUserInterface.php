@@ -8,5 +8,5 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 interface LoginUserInterface
 {
-    public function execute(Authenticatable $user, bool $remember = false, ?string $guard = null): void;
+    public function execute(Authenticatable $user, string $guard, bool $remember = false): void;
 }

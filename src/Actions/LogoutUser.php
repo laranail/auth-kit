@@ -16,11 +16,9 @@ class LogoutUser implements LogoutUserInterface
     ) {
     }
 
-    public function execute(?string $guard = null): void
+    public function execute(string $guard): void
     {
-        $guardName = $guard ?? config('auth-kit.guard');
-
-        $this->auth->guard($guardName)->logout();
+        $this->auth->guard($guard)->logout();
         $this->session->invalidate();
         $this->session->regenerateToken();
     }
