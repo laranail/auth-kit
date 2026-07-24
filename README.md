@@ -2,19 +2,17 @@
 
 A headless, action-based authentication toolkit for Laravel.
 
-No views. No routes. No controllers. No frontend assumptions.
-
-The package ships single-purpose **Action** classes that take a typed input DTO and return a typed result. You compose them wherever you need auth — HTTP controllers, Livewire components, Artisan commands, queue jobs, or module-specific service providers in a modular monolith.
+No views. No routes. No controllers shipped. No frontend assumptions.
 
 ## Why
 
 Most Laravel auth packages ship UI, routes, and opinions. This one ships **plain PHP objects**:
 
-- Actions have one public method: `execute()`.
-- Inputs are `readonly` DTOs. No arrays across boundaries.
-- Outputs are `readonly` result objects. No `bool`, no `?User`.
-- No exceptions for expected outcomes (wrong password, throttled). Exceptions are reserved for programmer errors.
-- Every action is injectable, mockable, and testable in isolation.
+- **Actions** — one public method: `execute()`. Single-purpose, injectable, mockable.
+- **DTOs** — typed `readonly` inputs. No arrays across boundaries.
+- **Result objects** — typed outputs. No `bool`, no `?User`.
+- **No exceptions** for expected outcomes (wrong password, throttled). Exceptions are reserved for programmer errors.
+- **Composable** — credential verification and session login are separate actions. API callers skip session concerns; web callers chain them.
 
 This makes the package reusable across multiple modules of the same app — e.g. `user` and `admin` modules — each with its own guard.
 
@@ -42,8 +40,12 @@ php artisan vendor:publish --tag=auth-kit-config
 
 ```php
 return [
-    // The default guard used by the HTTP layer when no explicit guard is passed.
     'guard' => env('AUTH_KIT_GUARD', 'web'),
+
+    'rate_limit' => [
+        'max_attempts'  => (int) env('AUTH_KIT_RATE_LIMIT_MAX_ATTEMPTS', 5),
+        'decay_minutes' => (int) env('AUTH_KIT_RATE_LIMIT_DECAY_MINUTES', 1),
+    ],
 ];
 ```
 
@@ -56,32 +58,25 @@ Guards and user providers are defined the standard Laravel way in `config/auth.p
 An action is a single-purpose class with one public method:
 
 ```php
-final readonly class SomeAction
-{
-    public function __construct(/* injected deps */) {}
+$action = app(AttemptEmailPasswordLogin::class);
 
-    public function execute(SomeInput $input): SomeResult
-    {
-        // one thing, well
-    }
-}
-```
-
-Resolve actions from the container so their dependencies are wired for you:
-
-```php
-$action = app(SomeAction::class);
+$result = $action->execute(new AttemptEmailPasswordLoginInput(
+    email:    'ada@example.com',
+    password: 'secret',
+    guard:    'web',
+));
 ```
 
 ### Result object
 
-`AuthResult` represents the outcome of any authentication attempt. It has three shapes:
+`AuthResult` represents the outcome of any authentication attempt:
 
-| Named constructor                 | Status                  | Extra data          |
-|-----------------------------------|-------------------------|---------------------|
-| `AuthResult::passed($user)`       | `AuthStatus::Passed`    | `user`              |
-| `AuthResult::failed()`            | `AuthStatus::Failed`    | —                   |
-| `AuthResult::throttled($seconds)` | `AuthStatus::Throttled` | `retryAfterSeconds` |
+| Named constructor                 | Status                  | Extra data                       |
+|-----------------------------------|-------------------------|----------------------------------|
+| `AuthResult::passed($user)`       | `AuthStatus::Passed`    | `user`                           |
+| `AuthResult::failed()`            | `AuthStatus::Failed`    | —                                |
+| `AuthResult::throttled($seconds)` | `AuthStatus::Throttled` | `retryAfterSeconds`              |
+| `AuthResult::allowed()`           | `AuthStatus::Passed`    | — (no user, for pre-auth checks) |
 
 Check the outcome with `->isPassed()` or by switching on `->status`.
 
@@ -91,240 +86,26 @@ Actions compose. Verifying credentials and logging the user into the session are
 
 ## Available actions
 
-| Action | Purpose |
-|--------|---------|
-| `Simtabi\Laranail\Auth\Actions\AttemptEmailPasswordLogin` | Verify email + password against a guard. Returns an `AuthResult`. |
-| `Simtabi\Laranail\Auth\Actions\AttemptUsernameLogin` | Verify username + password against a guard. Returns an `AuthResult`. |
-| `Simtabi\Laranail\Auth\Actions\CheckEmailExists` | Check whether an email address is registered. Returns `bool`. |
-| `Simtabi\Laranail\Auth\Actions\CheckUsernameExists` | Check whether a username is registered. Returns `bool`. |
-| `Simtabi\Laranail\Auth\Actions\FindUserByEmail` | Retrieve a user by email. Returns `?Authenticatable`. |
-| `Simtabi\Laranail\Auth\Actions\FindUserByUsername` | Retrieve a user by username. Returns `?Authenticatable`. |
-| `Simtabi\Laranail\Auth\Actions\EnforceLoginRateLimitAction` | Check and increment rate limit counter. Returns `AuthResult`. |
-| `Simtabi\Laranail\Auth\Actions\LoginUser` | Log an `Authenticatable` into the guard and regenerate the session. |
-| `Simtabi\Laranail\Auth\Actions\LogoutUser` | Log the current user out of the guard and invalidate the session. |
+| Action                        | Description                                                        | Docs                                         |
+|-------------------------------|--------------------------------------------------------------------|----------------------------------------------|
+| `AttemptEmailPasswordLogin`   | Verify email + password against a guard                            | [Docs](docs/attempt-email-password-login.md) |
+| `AttemptUsernameLogin`        | Verify username + password against a guard                         | [Docs](docs/attempt-username-login.md)       |
+| `CheckEmailExists`            | Check whether an email address is registered                       | [Docs](docs/check-email-exists.md)           |
+| `CheckUsernameExists`         | Check whether a username is registered                             | [Docs](docs/check-username-exists.md)        |
+| `FindUserByEmail`             | Retrieve a user by email                                           | [Docs](docs/find-user-by-email.md)           |
+| `FindUserByUsername`          | Retrieve a user by username                                        | [Docs](docs/find-user-by-username.md)        |
+| `EnforceLoginRateLimitAction` | Check and increment rate limit counter                             | [Docs](docs/enforce-login-rate-limit.md)     |
+| `LoginUser`                   | Log an `Authenticatable` into the guard and regenerate the session | [Docs](docs/login-user.md)                   |
+| `LogoutUser`                  | Log the current user out and invalidate the session                | [Docs](docs/logout-user.md)                  |
 
-More actions (username login, rate limiting, logout, social, 2FA) will be added incrementally. See [Roadmap](#roadmap).
+### Supporting types
 
-## Usage
-
-### Headless password verification (API / stateless)
-
-```php
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginInput;
-use Simtabi\Laranail\Auth\Results\AuthStatus;
-
-$result = app(AttemptPasswordLoginAction::class)->execute(
-    new AttemptPasswordLoginInput(
-        email: 'ada@example.com',
-        password: 'secret',
-    ),
-);
-
-return match ($result->status) {
-    AuthStatus::Passed    => response()->json(['user' => $result->user]),
-    AuthStatus::Failed    => response()->json(['message' => 'Invalid credentials'], 422),
-    AuthStatus::Throttled => response()->json(
-        ['message' => "Try again in {$result->retryAfterSeconds}s"],
-        429,
-    ),
-};
-```
-
-### Session-based login (web)
-
-Chain credential verification with a session login:
-
-```php
-use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginInput;
-use Simtabi\Laranail\Auth\Actions\Session\LoginUserAction;
-
-public function store(
-    Request $request,
-    AttemptPasswordLoginAction $attempt,
-    LoginUserAction $login,
-) {
-    $result = $attempt->execute(new AttemptPasswordLoginInput(
-        email:    $request->string('email')->toString(),
-        password: $request->string('password')->toString(),
-        remember: $request->boolean('remember'),
-    ));
-
-    if (! $result->isPassed()) {
-        return back()->withErrors(['email' => 'Invalid credentials']);
-    }
-
-    $login->execute($result->user, guard: 'web', remember: $request->boolean('remember'));
-
-    return redirect()->intended();
-}
-```
-
-### Check email existence
-
-Use `CheckEmailExistsAction` to determine whether an email address is registered.
-
-```php
-use Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsAction;
-use Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsInput;
-
-$action = app(CheckEmailExistsAction::class);
-
-$exists = $action->execute(new CheckEmailExistsInput(
-    email: 'user@example.com',
-));
-
-if ($exists) {
-    // proceed with password reset, login prompt, etc.
-}
-```
-
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| `email` | `string` | yes | — | The email address to look up. |
-| `guard` | `string` | yes | — | Auth guard to use. |
-
-### Per-module usage (admin vs user)
-
-The same actions serve any number of modules. Pass the target guard on the input DTO:
-
-```php
-// In the admin module
-$result = app(AttemptPasswordLoginAction::class)->execute(
-    new AttemptPasswordLoginInput(
-        email:    $email,
-        password: $password,
-        guard:    'admin',
-    ),
-);
-
-if ($result->isPassed()) {
-    app(LoginUserAction::class)->execute($result->user, guard: 'admin');
-}
-```
-
-Define the `admin` guard the standard Laravel way in `config/auth.php`:
-
-```php
-'guards' => [
-    'web'   => ['driver' => 'session', 'provider' => 'users'],
-    'admin' => ['driver' => 'session', 'provider' => 'admins'],
-],
-
-'providers' => [
-    'users'  => ['driver' => 'eloquent', 'model' => App\Models\User::class],
-    'admins' => ['driver' => 'eloquent', 'model' => App\Models\Admin::class],
-],
-```
-
-Each module can wrap the actions in a thin controller of its own — the package deliberately does not ship concrete controllers.
-
-### Abstract controllers
-
-The package ships abstract controllers that handle JSON responses and delegate non-JSON responses to overridable methods. Extend them to wire up your own routes:
-
-| Abstract Controller | Delegates To | Overridable Methods |
-|---------------------|-------------|---------------------|
-| `AbstractAttemptEmailPasswordLoginController` | `AttemptEmailPasswordLogin` | `passed()`, `failed()`, `throttled()` |
-| `AbstractAttemptUsernameLoginController` | `AttemptUsernameLogin` | `passed()`, `failed()`, `throttled()` |
-| `AbstractCheckEmailExistsController` | `CheckEmailExists` | `respond()` |
-| `AbstractCheckUsernameExistsController` | `CheckUsernameExists` | `respond()` |
-| `AbstractLogoutController` | `LogoutUser` | `loggedOut()` |
-
-All extend `AbstractAuthController`, which provides a `guard()` helper reading from `config('auth-kit.guard')`.
-
-**Example — login controller:**
-
-```php
-use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Http\Controllers\AbstractAttemptEmailPasswordLoginController;
-use Simtabi\Laranail\Auth\Support\AuthResult;
-
-class LoginController extends AbstractAttemptEmailPasswordLoginController
-{
-    protected function passed(Request $request, AuthResult $result): mixed
-    {
-        return redirect()->intended('/dashboard');
-    }
-
-    protected function failed(Request $request, AuthResult $result): mixed
-    {
-        return back()->withErrors(['email' => 'Invalid credentials.']);
-    }
-}
-```
-
-**Example — logout controller:**
-
-```php
-use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Http\Controllers\AbstractLogoutController;
-
-class LogoutController extends AbstractLogoutController
-{
-    protected function loggedOut(Request $request): mixed
-    {
-        return redirect('/');
-    }
-}
-```
-
-For JSON requests (`Accept: application/json` or `$request->expectsJson()`), the abstract controllers return structured JSON automatically — no override needed.
-
-### Using actions from a queue job
-
-Because actions don't touch `Request` or `Response`, they run anywhere:
-
-```php
-final class VerifyImportedCredentialsJob implements ShouldQueue
-{
-    public function __construct(
-        public string $email,
-        public string $password,
-    ) {}
-
-    public function handle(AttemptPasswordLoginAction $attempt): void
-    {
-        $result = $attempt->execute(new AttemptPasswordLoginInput(
-            email:    $this->email,
-            password: $this->password,
-        ));
-
-        // Do something with $result->status …
-    }
-}
-```
-
-## Testing your integration
-
-Actions are trivial to mock because they have one method:
-
-```php
-use Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction;
-use Simtabi\Laranail\Auth\Results\AuthResult;
-
-it('shows an error when credentials are invalid', function () {
-    $this->mock(AttemptPasswordLoginAction::class)
-        ->shouldReceive('execute')
-        ->once()
-        ->andReturn(AuthResult::failed());
-
-    $this->post('/login', ['email' => 'x@y.z', 'password' => 'bad'])
-        ->assertSessionHasErrors('email');
-});
-```
-
-## Running the package's own tests
-
-```bash
-composer test
-```
+| Type                        | Docs                                 |
+|-----------------------------|--------------------------------------|
+| `AuthResult` + `AuthStatus` | [Docs](docs/auth-result.md)          |
+| Abstract controllers        | [Docs](docs/abstract-controllers.md) |
 
 ## Roadmap
-
-The package is intentionally minimal today. Future action additions:
 
 - Social login (redirect + callback actions)
 - 2FA / MFA (challenge issue + verify actions with TOTP, OTP, recovery codes)
