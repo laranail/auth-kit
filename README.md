@@ -91,11 +91,17 @@ Actions compose. Verifying credentials and logging the user into the session are
 
 ## Available actions
 
-| Action                                                              | Purpose                                                             |
-|---------------------------------------------------------------------|---------------------------------------------------------------------|
-| `Simtabi\Laranail\Auth\Actions\Password\AttemptPasswordLoginAction` | Verify email + password against a guard. Returns an `AuthResult`.   |
-| `Simtabi\Laranail\Auth\Actions\Email\CheckEmailExistsAction`        | Check whether an email address is registered. Returns `bool`.       |
-| `Simtabi\Laranail\Auth\Actions\Session\LoginUserAction`             | Log an `Authenticatable` into the guard and regenerate the session. |
+| Action | Purpose |
+|--------|---------|
+| `Simtabi\Laranail\Auth\Actions\AttemptEmailPasswordLogin` | Verify email + password against a guard. Returns an `AuthResult`. |
+| `Simtabi\Laranail\Auth\Actions\AttemptUsernameLogin` | Verify username + password against a guard. Returns an `AuthResult`. |
+| `Simtabi\Laranail\Auth\Actions\CheckEmailExists` | Check whether an email address is registered. Returns `bool`. |
+| `Simtabi\Laranail\Auth\Actions\CheckUsernameExists` | Check whether a username is registered. Returns `bool`. |
+| `Simtabi\Laranail\Auth\Actions\FindUserByEmail` | Retrieve a user by email. Returns `?Authenticatable`. |
+| `Simtabi\Laranail\Auth\Actions\FindUserByUsername` | Retrieve a user by username. Returns `?Authenticatable`. |
+| `Simtabi\Laranail\Auth\Actions\EnforceLoginRateLimitAction` | Check and increment rate limit counter. Returns `AuthResult`. |
+| `Simtabi\Laranail\Auth\Actions\LoginUser` | Log an `Authenticatable` into the guard and regenerate the session. |
+| `Simtabi\Laranail\Auth\Actions\LogoutUser` | Log the current user out of the guard and invalidate the session. |
 
 More actions (username login, rate limiting, logout, social, 2FA) will be added incrementally. See [Roadmap](#roadmap).
 
@@ -268,9 +274,6 @@ composer test
 
 The package is intentionally minimal today. Future action additions:
 
-- Rate limiting (`EnforceLoginRateLimitAction`)
-- Username-based login (`AttemptUsernameLoginAction`)
-- Logout (`LogoutUserAction`)
 - Social login (redirect + callback actions)
 - 2FA / MFA (challenge issue + verify actions with TOTP, OTP, recovery codes)
 - Optional HTTP companion package (`laranail/auth-kit-http`) with controllers and route macros
