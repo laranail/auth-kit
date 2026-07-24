@@ -20,6 +20,8 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: Contracts\AttemptUsernameLoginInterface::class, concrete: Actions\AttemptUsernameLogin::class);
         $this->app->bind(abstract: Contracts\FindUserByUsernameInterface::class, concrete: Actions\FindUserByUsername::class);
         $this->app->bind(abstract: Contracts\CheckUsernameExistsInterface::class, concrete: Actions\CheckUsernameExists::class);
+
+        $this->app->bind(abstract: Contracts\EnforceLoginRateLimitInterface::class, concrete: Actions\EnforceLoginRateLimitAction::class);
     }
 
     public function boot(): void
