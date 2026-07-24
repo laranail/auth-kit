@@ -42,7 +42,7 @@ php artisan vendor:publish --tag=auth-kit-config
 
 ```php
 return [
-    // The default guard used when an action is invoked without an explicit guard.
+    // The default guard used by the HTTP layer when no explicit guard is passed.
     'guard' => env('AUTH_KIT_GUARD', 'web'),
 ];
 ```
@@ -156,7 +156,7 @@ public function store(
         return back()->withErrors(['email' => 'Invalid credentials']);
     }
 
-    $login->execute($result->user, remember: $request->boolean('remember'));
+    $login->execute($result->user, guard: 'web', remember: $request->boolean('remember'));
 
     return redirect()->intended();
 }
@@ -184,7 +184,7 @@ if ($exists) {
 | Property | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
 | `email` | `string` | yes | — | The email address to look up. |
-| `guard` | `string\|null` | no | `null` | Auth guard to use. Falls back to `auth-kit.guard` config value. |
+| `guard` | `string` | yes | — | Auth guard to use. |
 
 ### Per-module usage (admin vs user)
 

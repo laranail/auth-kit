@@ -17,11 +17,9 @@ class LoginUser implements LoginUserInterface
     ) {
     }
 
-    public function execute(Authenticatable $user, bool $remember = false, ?string $guard = null): void
+    public function execute(Authenticatable $user, string $guard, bool $remember = false): void
     {
-        $guardName = $guard ?? config('auth-kit.guard');
-
-        $this->auth->guard($guardName)->login($user, $remember);
+        $this->auth->guard($guard)->login($user, $remember);
         $this->session->regenerate();
     }
 }

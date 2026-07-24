@@ -6,5 +6,5 @@ namespace Simtabi\Laranail\Auth\Contracts;
 
 interface LogoutUserInterface
 {
-    public function execute(?string $guard = null): void;
+    public function execute(string $guard): void;
 }
