@@ -97,6 +97,9 @@ Actions compose. Verifying credentials and logging the user into the session are
 | `EnforceLoginRateLimitAction` | Check and increment rate limit counter                             | [Docs](docs/enforce-login-rate-limit.md)     |
 | `LoginUser`                   | Log an `Authenticatable` into the guard and regenerate the session | [Docs](docs/login-user.md)                   |
 | `LogoutUser`                  | Log the current user out and invalidate the session                | [Docs](docs/logout-user.md)                  |
+| `SocialRedirectAction`        | Generate OAuth redirect URL for a social provider                  | [Docs](docs/social-login.md)                 |
+| `SocialCallbackAction`        | Handle OAuth callback with closure-based user resolution           | [Docs](docs/social-login.md)                 |
+| `CreateSocialAccountAction`   | Create a social account record via morph                           | [Docs](docs/social-login.md)                 |
 
 ### Supporting types
 
@@ -107,7 +110,6 @@ Actions compose. Verifying credentials and logging the user into the session are
 
 ## Roadmap
 
-- Social login (redirect + callback actions)
 - 2FA / MFA (challenge issue + verify actions with TOTP, OTP, recovery codes)
 - Optional HTTP companion package (`laranail/auth-kit-http`) with controllers and route macros
 
