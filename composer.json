@@ -18,7 +18,9 @@
     ],
     "require": {
         "php": "^8.4 | ^8.5",
-        "laravel/framework": "^13.0"
+        "laravel/framework": "^13.0",
+        "laravel/socialite": "^5.0",
+        "socialiteproviders/manager": "^4.4"
     },
     "require-dev": {
         "pestphp/pest": "^4.0",
@@ -34,6 +36,7 @@
     "autoload-dev": {
         "psr-4": {
             "Simtabi\\Laranail\\Auth\\Tests\\": "tests/",
+            "Simtabi\\Laranail\\Auth\\Database\\Factories\\": "database/factories/",
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"

@@ -12,6 +12,7 @@ abstract class TestCase extends BaseTestCase
     protected function getPackageProviders($app): array
     {
         return [
+            \Laravel\Socialite\SocialiteServiceProvider::class,
             AuthKitServiceProvider::class,
         ];
     }
@@ -33,5 +34,6 @@ abstract class TestCase extends BaseTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__) . '/vendor/orchestra/testbench-core/laravel/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations');
     }
 }
