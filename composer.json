@@ -56,10 +56,6 @@
         "test": [
             "vendor/bin/pest --parallel"
         ],
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
         "lint": [
             "@php vendor/bin/pint --ansi"
         ]
