@@ -13,7 +13,7 @@ class PayPalSocialProvider extends AbstractProvider
     /** @var array<int, string> */
     protected $scopes = ['openid', 'profile', 'email'];
 
-    protected string $scopeSeparator = ' ';
+    protected $scopeSeparator = ' ';
 
     /** @return array<string, mixed> */
     public function getAccessTokenResponse($code): array
