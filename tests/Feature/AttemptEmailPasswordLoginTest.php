@@ -40,3 +40,24 @@ it(description: 'returns failed when credentials are wrong', closure: function (
 
     expect($result->isPassed())->toBeFalse();
 });
+
+it(description: 'throttles repeated failed credentials', closure: function () {
+    config()->set('auth-kit.rate_limit.max_attempts', 1);
+
+    User::factory()->create([
+        'email'    => 'ada@example.com',
+        'password' => bcrypt('secret'),
+    ]);
+
+    $action = app(AttemptEmailPasswordLogin::class);
+    $input = new AttemptEmailPasswordLoginInput(
+        email: 'ada@example.com',
+        password: 'wrong',
+        guard: 'web',
+    );
+
+    $action->execute($input);
+    $result = $action->execute($input);
+
+    expect($result->status)->toBe(\Simtabi\Laranail\Auth\Enums\AuthStatus::Throttled);
+});

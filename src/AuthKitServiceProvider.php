@@ -18,6 +18,7 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: Contracts\CheckEmailExistsInterface::class, concrete: Actions\CheckEmailExists::class);
         $this->app->bind(abstract: Contracts\FindUserByEmailInterface::class, concrete: Actions\FindUserByEmail::class);
         $this->app->bind(abstract: Contracts\LoginUserInterface::class, concrete: Actions\LoginUser::class);
+        $this->app->bind(abstract: Contracts\CreateNewUserInterface::class, concrete: Actions\CreateNewUser::class);
 
         $this->app->bind(abstract: Contracts\AttemptUsernameLoginInterface::class, concrete: Actions\AttemptUsernameLogin::class);
         $this->app->bind(abstract: Contracts\FindUserByUsernameInterface::class, concrete: Actions\FindUserByUsername::class);
