@@ -13,14 +13,14 @@ use Simtabi\Laranail\Auth\Http\Requests\CreateNewUserRequest;
 abstract class AbstractRegisterController extends AbstractAuthController
 {
     abstract protected function registered(Request $request, Authenticatable $user): mixed;
-    
+
     public function store(CreateNewUserRequest $request, CreateNewUserInterface $creator): mixed
     {
         $user = $creator->execute(input: new CreateNewUserInput(
             name: $request->validated(key: 'name'),
             email: $request->validated(key: 'email'),
             password: $request->validated(key: 'password'),
-            passwordConfirmation: $request->validated(key: 'password_confirmation'),
+            passwordConfirmation: $request->input(key: 'password_confirmation', default: ''),
             guard: $this->guard(),
         ));
 

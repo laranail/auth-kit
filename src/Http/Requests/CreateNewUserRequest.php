@@ -11,9 +11,10 @@ class CreateNewUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required', 'string', 'confirmed'],
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'string', 'email', 'max:255'],
+            'password'              => ['required', 'string', 'confirmed'],
+            'password_confirmation' => ['required', 'string'],
         ];
     }
 }
