@@ -7,13 +7,13 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
-use Simtabi\Laranail\Auth\Actions\AttemptUsernameLogin;
 use Simtabi\Laranail\Auth\Dtos\AttemptUsernameLoginInput;
+use Simtabi\Laranail\Auth\Contracts\AttemptUsernameLoginInterface;
 use Simtabi\Laranail\Auth\Http\Requests\AttemptUsernameLoginRequest;
 
 abstract class AbstractAttemptUsernameLoginController extends AbstractAuthController
 {
-    public function __invoke(AttemptUsernameLoginRequest $request, AttemptUsernameLogin $action): mixed
+    public function __invoke(AttemptUsernameLoginRequest $request, AttemptUsernameLoginInterface $action): mixed
     {
         $result = $action->execute(
             input: new AttemptUsernameLoginInput(

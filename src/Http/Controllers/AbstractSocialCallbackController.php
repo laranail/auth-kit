@@ -8,12 +8,13 @@ use Closure;
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
-use Simtabi\Laranail\Auth\Actions\SocialCallbackAction;
+use Simtabi\Laranail\Auth\Enums\SocialProvider;
 use Simtabi\Laranail\Auth\Dtos\SocialCallbackActionInput;
+use Simtabi\Laranail\Auth\Contracts\SocialCallbackActionInterface;
 
 abstract class AbstractSocialCallbackController extends AbstractAuthController
 {
-    public function __invoke(Request $request, SocialCallbackAction $action): mixed
+    public function __invoke(Request $request, SocialCallbackActionInterface $action): mixed
     {
         $provider = SocialProvider::from(value: $request->route('provider'));
 

@@ -6,12 +6,12 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\SocialProvider;
-use Simtabi\Laranail\Auth\Actions\SocialRedirectAction;
 use Simtabi\Laranail\Auth\Dtos\SocialRedirectActionInput;
+use Simtabi\Laranail\Auth\Contracts\SocialRedirectActionInterface;
 
 abstract class AbstractSocialRedirectController extends AbstractAuthController
 {
-    public function __invoke(Request $request, SocialRedirectAction $action): mixed
+    public function __invoke(Request $request, SocialRedirectActionInterface $action): mixed
     {
         $provider = SocialProvider::from(value: $request->route('provider'));
 

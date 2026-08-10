@@ -34,6 +34,7 @@ abstract class TestCase extends BaseTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__) . '/vendor/orchestra/testbench-core/laravel/migrations');
-        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations/pending_email_tokens');
+        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations/social');
     }
 }

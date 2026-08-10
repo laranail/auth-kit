@@ -6,13 +6,13 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Models\PendingEmailToken;
-use Simtabi\Laranail\Auth\Actions\VerifyPendingEmailToken;
 use Simtabi\Laranail\Auth\Dtos\VerifyPendingEmailTokenInput;
+use Simtabi\Laranail\Auth\Contracts\VerifyPendingEmailTokenInterface;
 use Simtabi\Laranail\Auth\Http\Requests\VerifyPendingEmailTokenRequest;
 
 abstract class AbstractVerifyPendingEmailTokenController extends AbstractAuthController
 {
-    public function __invoke(VerifyPendingEmailTokenRequest $request, VerifyPendingEmailToken $action): mixed
+    public function __invoke(VerifyPendingEmailTokenRequest $request, VerifyPendingEmailTokenInterface $action): mixed
     {
         $pendingToken = $action->execute(
             input: new VerifyPendingEmailTokenInput(
