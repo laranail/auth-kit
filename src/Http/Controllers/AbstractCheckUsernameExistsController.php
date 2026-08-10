@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Actions\CheckUsernameExists;
 use Simtabi\Laranail\Auth\Dtos\CheckUsernameExistsInput;
+use Simtabi\Laranail\Auth\Contracts\CheckUsernameExistsInterface;
 use Simtabi\Laranail\Auth\Http\Requests\CheckUsernameExistsRequest;
 
 abstract class AbstractCheckUsernameExistsController extends AbstractAuthController
 {
-    public function __invoke(CheckUsernameExistsRequest $request, CheckUsernameExists $action): mixed
+    public function __invoke(CheckUsernameExistsRequest $request, CheckUsernameExistsInterface $action): mixed
     {
         $exists = $action->execute(
             input: new CheckUsernameExistsInput(

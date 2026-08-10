@@ -49,7 +49,19 @@ class AuthKitServiceProvider extends ServiceProvider
 
     private function registerMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->publishes(
+            paths: [__DIR__ . '/../database/migrations/pending_email_tokens' => database_path('migrations')],
+            groups: 'auth-kit-pending-email-token-migrations'
+        );
+
+        $this->publishes(
+            paths: [__DIR__ . '/../database/migrations/social' => database_path('migrations')],
+            groups: 'auth-kit-social-migrations'
+        );
     }
 
     private function registerConfig(): void
