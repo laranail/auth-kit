@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
-use Closure;
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
@@ -21,7 +20,7 @@ abstract class AbstractSocialCallbackController extends AbstractAuthController
         $result = $action->execute(
             input: new SocialCallbackActionInput(
                 provider: $provider,
-                resolve: $this->resolve(provider: $provider),
+                guard: $this->guard(),
             )
         );
 
@@ -48,14 +47,6 @@ abstract class AbstractSocialCallbackController extends AbstractAuthController
             default            => $this->failed(request: $request, result: $result),
         };
     }
-
-    /**
-     * Consumer provides find-or-create logic.
-     *
-     * @param  SocialProvider  $provider
-     * @return Closure(\Laravel\Socialite\Contracts\User): \Illuminate\Contracts\Auth\Authenticatable|null
-     */
-    abstract protected function resolve(SocialProvider $provider): Closure;
 
     abstract protected function passed(Request $request, AuthResult $result): mixed;
 

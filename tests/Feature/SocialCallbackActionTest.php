@@ -4,102 +4,80 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
+use Simtabi\Laranail\Auth\Models\Social;
 use Simtabi\Laranail\Auth\Enums\SocialProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Simtabi\Laranail\Auth\Actions\SocialCallbackAction;
 use Simtabi\Laranail\Auth\Dtos\SocialCallbackActionInput;
 
-beforeEach(closure: function (): void {
+beforeEach(function (): void {
     $this->socialiteUser = new SocialiteUser();
-
-    $this->socialiteUser->map(attributes: [
-        'id'       => '123456789',
-        'name'     => 'John Doe',
-        'nickname' => 'johndoe',
-        'email'    => 'john@example.com',
-        'avatar'   => 'https://example.com/avatar.jpg',
+    $this->socialiteUser->map([
+        'id'             => '123456789',
+        'name'           => 'John Doe',
+        'nickname'       => 'johndoe',
+        'email'          => 'john@example.com',
+        'avatar'         => 'https://example.com/avatar.jpg',
+        'email_verified' => true,
     ]);
     $this->socialiteUser->token = 'mock-token';
     $this->socialiteUser->refreshToken = 'mock-refresh-token';
     $this->socialiteUser->expiresIn = 3600;
 });
 
-it(description: 'returns passed when closure returns a user', closure: function (): void {
-    Socialite::fake(driver: SocialProvider::GOOGLE->value, user: $this->socialiteUser);
+it('creates a new user and social account when no match exists', function (): void {
+    Socialite::fake(SocialProvider::GOOGLE->value, $this->socialiteUser);
 
-    $user = User::factory()->create();
-
-    $action = app(abstract: SocialCallbackAction::class);
-
-    $result = $action->execute(input: new SocialCallbackActionInput(
+    $result = app(SocialCallbackAction::class)->execute(new SocialCallbackActionInput(
         provider: SocialProvider::GOOGLE,
-        resolve: fn () => $user,
+        guard: 'web',
     ));
 
-    expect(value: $result->isPassed())->toBeTrue()
-        ->and(value: $result->user?->getAuthIdentifier())->toBe($user->getAuthIdentifier());
+    expect($result->isPassed())->toBeTrue()
+        ->and($result->user->email)->toBe('john@example.com')
+        ->and(Social::query()->count())->toBe(1);
 });
 
-it(description: 'returns failed when closure returns null', closure: function (): void {
-    Socialite::fake(driver: SocialProvider::GOOGLE->value, user: $this->socialiteUser);
+it('returns existing user when social account already exists', function (): void {
+    Socialite::fake(SocialProvider::GOOGLE->value, $this->socialiteUser);
 
-    $action = app(abstract: SocialCallbackAction::class);
+    $existingUser = User::factory()->create(['email' => 'john@example.com']);
+    Social::query()->create([
+        'socialable_type' => get_class($existingUser),
+        'socialable_id'   => $existingUser->getAuthIdentifier(),
+        'provider'        => 'google',
+        'provider_id'     => '123456789',
+        'name'            => 'John Doe',
+        'email'           => 'john@example.com',
+        'token'           => 'old-token',
+        'refresh_token'   => 'old-refresh',
+    ]);
 
-    $result = $action->execute(input: new SocialCallbackActionInput(
+    $result = app(SocialCallbackAction::class)->execute(new SocialCallbackActionInput(
         provider: SocialProvider::GOOGLE,
-        resolve: fn () => null,
+        guard: 'web',
     ));
 
-    expect(value: $result->isPassed())->toBeFalse();
+    expect($result->isPassed())->toBeTrue()
+        ->and($result->user->getAuthIdentifier())->toBe($existingUser->getAuthIdentifier());
 });
 
-it(description: 'passes socialite user to closure', closure: function (): void {
-    Socialite::fake(driver: SocialProvider::GOOGLE->value, user: $this->socialiteUser);
+it('returns failed when socialite user has no email', function (): void {
+    $noEmailUser = new SocialiteUser();
+    $noEmailUser->map([
+        'id'       => '123456789',
+        'name'     => 'No Email',
+        'nickname' => 'noemail',
+    ]);
+    $noEmailUser->token = 'mock-token';
+    $noEmailUser->refreshToken = 'mock-refresh';
 
-    $action = app(abstract: SocialCallbackAction::class);
-    $capturedUser = null;
+    Socialite::fake(SocialProvider::GOOGLE->value, $noEmailUser);
 
-    $action->execute(input: new SocialCallbackActionInput(
+    $result = app(SocialCallbackAction::class)->execute(new SocialCallbackActionInput(
         provider: SocialProvider::GOOGLE,
-        resolve: function (SocialiteUser $socialUser) use (&$capturedUser): null {
-            $capturedUser = $socialUser;
-
-            return null;
-        },
+        guard: 'web',
     ));
 
-    expect(value: $capturedUser)->not->toBeNull()
-        ->and(value: $capturedUser->getId())->toBe('123456789')
-        ->and(value: $capturedUser->getEmail())->toBe('john@example.com')
-        ->and(value: $capturedUser->getName())->toBe('John Doe');
-});
-
-it(description: 'works with facebook provider', closure: function (): void {
-    Socialite::fake(driver: SocialProvider::FACEBOOK->value, user: $this->socialiteUser);
-
-    $user = User::factory()->create();
-
-    $action = app(abstract: SocialCallbackAction::class);
-
-    $result = $action->execute(input: new SocialCallbackActionInput(
-        provider: SocialProvider::FACEBOOK,
-        resolve: fn () => $user,
-    ));
-
-    expect(value: $result->isPassed())->toBeTrue();
-});
-
-it(description: 'works with paypal provider', closure: function (): void {
-    Socialite::fake(driver: SocialProvider::PAYPAL->value, user: $this->socialiteUser);
-
-    $user = User::factory()->create();
-
-    $action = app(abstract: SocialCallbackAction::class);
-
-    $result = $action->execute(input: new SocialCallbackActionInput(
-        provider: SocialProvider::PAYPAL,
-        resolve: fn () => $user,
-    ));
-
-    expect(value: $result->isPassed())->toBeTrue();
+    expect($result->isPassed())->toBeFalse();
 });
