@@ -20,8 +20,6 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: Contracts\LoginUserInterface::class, concrete: Actions\LoginUser::class);
         $this->app->bind(abstract: Contracts\CreateNewUserInterface::class, concrete: Actions\CreateNewUser::class);
 
-        $this->app->bind(abstract: Contracts\EnforceLoginRateLimitInterface::class, concrete: Actions\EnforceLoginRateLimitAction::class);
-
         $this->app->bind(abstract: Contracts\LogoutUserInterface::class, concrete: Actions\LogoutUser::class);
 
         // Social actions
