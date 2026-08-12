@@ -32,8 +32,6 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: Contracts\CreatePendingEmailTokenInterface::class, concrete: Actions\CreatePendingEmailToken::class);
         $this->app->bind(abstract: Contracts\VerifyPendingEmailTokenInterface::class, concrete: Actions\VerifyPendingEmailToken::class);
         $this->app->bind(abstract: Contracts\SendPendingEmailTokenInterface::class, concrete: Actions\SendPendingEmailToken::class);
-        $this->app->bind(abstract: Contracts\RegisterInterface::class, concrete: Actions\Register::class);
-
         // Social actions
         $this->app->bind(abstract: Contracts\SocialRedirectActionInterface::class, concrete: Actions\SocialRedirectAction::class);
         $this->app->bind(abstract: Contracts\SocialCallbackActionInterface::class, concrete: Actions\SocialCallbackAction::class);
