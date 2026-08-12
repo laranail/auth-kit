@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Actions;
 
-use LogicException;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Model;
 use Simtabi\Laranail\Auth\Models\Social;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Simtabi\Laranail\Auth\Enums\SocialProvider;
+use Simtabi\Laranail\Auth\Support\UserModelResolver;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Simtabi\Laranail\Auth\Contracts\ResolveSocialIdentityInterface;
 use Simtabi\Laranail\Auth\Contracts\CreateSocialAccountActionInterface;
@@ -41,7 +41,7 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
             return $social->socialable;
         }
 
-        $userModel = $this->userModel($guard);
+        $userModel = UserModelResolver::resolve(guard: $guard);
 
         if (auth()->check()) {
             $this->createSocialAccount->execute(
@@ -116,21 +116,5 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
         $user->save();
 
         return $user;
-    }
-
-    private function userModel(string $guard): string
-    {
-        $model = config('auth-kit.user_model');
-
-        if (! is_string($model) || $model === '') {
-            $provider = config("auth.guards.{$guard}.provider", config('auth.defaults.provider'));
-            $model = config("auth.providers.{$provider}.model");
-        }
-
-        if (! is_string($model) || ! is_a($model, Model::class, allow_string: true) || ! is_a($model, Authenticatable::class, allow_string: true)) {
-            throw new LogicException('The configured auth-kit user model must be an Eloquent Authenticatable model.');
-        }
-
-        return $model;
     }
 }

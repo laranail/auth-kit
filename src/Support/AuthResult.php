@@ -21,11 +21,6 @@ class AuthResult
         return new self(status: AuthStatus::Passed, user: $user);
     }
 
-    public static function allowed(): self
-    {
-        return new self(status: AuthStatus::Passed);
-    }
-
     public static function failed(): self
     {
         return new self(status: AuthStatus::Failed);
