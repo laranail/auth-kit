@@ -9,19 +9,19 @@ use Illuminate\Validation\Rules\Password;
 use Simtabi\Laranail\Auth\Actions\CreateNewUser;
 
 it(description: 'creates a user with a hashed password', closure: function (): void {
-    $user = app(CreateNewUser::class)->create([
+    $user = app(abstract: CreateNewUser::class)->create(input: [
         'name'                  => 'Ada Lovelace',
         'email'                 => 'ADA@EXAMPLE.COM',
         'password'              => 'password',
         'password_confirmation' => 'password',
     ]);
 
-    expect($user->email)->toBe('ada@example.com')
-        ->and($user->password)->not->toBe('password');
+    expect(value: $user->email)->toBe(expected: 'ada@example.com')
+        ->and(value: $user->password)->not->toBe(expected: 'password');
 });
 
 it(description: 'fails validation for duplicate email addresses', closure: function (): void {
-    User::factory()->create(['email' => 'ada@example.com']);
+    User::factory()->create(attributes: ['email' => 'ada@example.com']);
 
     $validator = Validator::make(data: [
         'name'                  => 'Ada Lovelace',
@@ -29,11 +29,11 @@ it(description: 'fails validation for duplicate email addresses', closure: funct
         'password'              => 'password',
         'password_confirmation' => 'password',
     ], rules: [
-        'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class)],
+        'email' => ['required', 'string', 'email', 'max:255', Rule::unique(table: User::class)],
     ]);
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->has('email'))->toBeTrue();
+    expect(value: $validator->fails())->toBeTrue()
+        ->and(value: $validator->errors()->has(key: 'email'))->toBeTrue();
 });
 
 it(description: 'fails validation when password confirmation does not match', closure: function (): void {
@@ -46,8 +46,8 @@ it(description: 'fails validation when password confirmation does not match', cl
         'password' => ['required', 'string', Password::default(), 'confirmed'],
     ]);
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->has('password'))->toBeTrue();
+    expect(value: $validator->fails())->toBeTrue()
+        ->and(value: $validator->errors()->has(key: 'password'))->toBeTrue();
 });
 
 it(description: 'fails validation when name is missing', closure: function (): void {
@@ -60,8 +60,8 @@ it(description: 'fails validation when name is missing', closure: function (): v
         'name' => ['required', 'string', 'max:255'],
     ]);
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->has('name'))->toBeTrue();
+    expect(value: $validator->fails())->toBeTrue()
+        ->and(value: $validator->errors()->has(key: 'name'))->toBeTrue();
 });
 
 it(description: 'fails validation when email is invalid', closure: function (): void {
@@ -74,8 +74,8 @@ it(description: 'fails validation when email is invalid', closure: function (): 
         'email' => ['required', 'string', 'email', 'max:255'],
     ]);
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->has('email'))->toBeTrue();
+    expect(value: $validator->fails())->toBeTrue()
+        ->and(value: $validator->errors()->has(key: 'email'))->toBeTrue();
 });
 
 it(description: 'fails validation when password is missing', closure: function (): void {
@@ -86,33 +86,33 @@ it(description: 'fails validation when password is missing', closure: function (
         'password' => ['required', 'string', Password::default(), 'confirmed'],
     ]);
 
-    expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->has('password'))->toBeTrue();
+    expect(value: $validator->fails())->toBeTrue()
+        ->and(value: $validator->errors()->has(key: 'password'))->toBeTrue();
 });
 
 it(description: 'resolves model from guard config when user_model is not set', closure: function (): void {
     config()->set(key: 'auth-kit.user_model', value: null);
     config()->set(key: 'auth-kit.guard', value: 'web');
 
-    $user = app(CreateNewUser::class)->create([
+    $user = app(abstract: CreateNewUser::class)->create(input: [
         'name'                  => 'Ada Lovelace',
         'email'                 => 'ada@example.com',
         'password'              => 'password',
         'password_confirmation' => 'password',
     ]);
 
-    expect($user)->toBeInstanceOf(User::class);
+    expect(value: $user)->toBeInstanceOf(class: User::class);
 });
 
 it(description: 'resolves model from explicit user_model config', closure: function (): void {
     config()->set(key: 'auth-kit.user_model', value: User::class);
 
-    $user = app(CreateNewUser::class)->create([
+    $user = app(abstract: CreateNewUser::class)->create(input: [
         'name'                  => 'Ada Lovelace',
         'email'                 => 'ada2@example.com',
         'password'              => 'password',
         'password_confirmation' => 'password',
     ]);
 
-    expect($user)->toBeInstanceOf(User::class);
+    expect(value: $user)->toBeInstanceOf(class: User::class);
 });
