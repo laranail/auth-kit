@@ -1,41 +1,24 @@
 # Laravel Auth Kit
 
-A headless authentication toolkit for Laravel 13+, powered by Fortify and Sanctum.
+Headless authentication for Laravel 13+. No views, routes, or controllers.
 
-No views. No routes. No controllers shipped. No frontend assumptions.
-
-## Why
-
-Most Laravel auth packages ship UI, routes, and opinions. Auth-kit ships **plain PHP objects** built on top of Fortify's audited security primitives:
-
-- **Fortify contracts** — `CreateNewUser` implements `CreatesNewUsers`, `ResetUserPassword` implements `ResetsUserPasswords`. Same patterns as Fortify stubs.
-- **Actions** — single-purpose, injectable, mockable. Login, logout, social identity resolution, token issuance.
-- **DTOs** — typed inputs. No arrays across boundaries (except where Fortify's contracts require them).
-- **Result objects** — `AuthResult` with named constructors: `passed()`, `failed()`, `throttled()`.
-- **Sanctum tokens** — `IssueTokenForUser` issues personal access tokens for API consumers.
-- **Composable** — credential verification and session login are separate actions. API callers skip session concerns; web callers chain them.
-
-This makes the package reusable across multiple modules of the same app — e.g. `user` and `admin` modules — each with its own guard.
+- **Fortify-backed** — password reset, email verification, login throttling
+- **Sanctum-ready** — API token issuance via `IssueTokenForUser`
+- **Social login** — Google, Facebook, X, LinkedIn, PayPal via Socialite
+- **Composable** — separate actions for credential check vs session login
 
 ## Requirements
 
-| Version | PHP            | Laravel |
-|---------|----------------|---------|
-| 1.x     | 8.4.x, 8.5.x   | 13.x    |
+PHP 8.4+ / Laravel 13.x
 
 ## Installation
 
 ```bash
 composer require laranail/auth-kit
-```
-
-Publish the config (optional):
-
-```bash
 php artisan vendor:publish --tag=auth-kit-config
 ```
 
-### With the Blade preset
+With the Blade preset:
 
 ```bash
 composer require laranail/auth-preset
@@ -43,6 +26,18 @@ php artisan laranail:authkit:install
 ```
 
 ## Configuration
+
+`.env`:
+
+```env
+AUTH_KIT_GUARD=web
+AUTH_KIT_RATE_LIMIT_MAX_ATTEMPTS=5
+AUTH_KIT_RATE_LIMIT_DECAY_MINUTES=1
+
+AUTH_KIT_GOOGLE_CLIENT_ID=
+AUTH_KIT_GOOGLE_CLIENT_SECRET=
+AUTH_KIT_GOOGLE_REDIRECT=${APP_URL}/auth/google/callback
+```
 
 `config/auth-kit.php`:
 
@@ -59,55 +54,166 @@ return [
         'views'    => false,
         'features' => ['reset-passwords', 'email-verification'],
     ],
+
+    'social' => [
+        'google' => [
+            'client_id'     => env('AUTH_KIT_GOOGLE_CLIENT_ID'),
+            'client_secret' => env('AUTH_KIT_GOOGLE_CLIENT_SECRET'),
+            'redirect'      => env('AUTH_KIT_GOOGLE_REDIRECT'),
+            'scopes'        => ['openid', 'profile', 'email'],
+        ],
+        // facebook, twitter, linkedin, paypal ...
+    ],
 ];
 ```
 
-Guards and user providers are defined the standard Laravel way in `config/auth.php`. This package delegates to whatever guards you configure.
+## Actions
 
-## What Fortify provides
+| Action                      | Purpose                                                        |
+|-----------------------------|----------------------------------------------------------------|
+| `AttemptEmailPasswordLogin` | Verify email + password against a guard, returns `AuthResult`  |
+| `LoginUser`                 | Log user into session + regenerate session                     |
+| `LogoutUser`                | Log out + invalidate session                                   |
+| `CreateNewUser`             | Validate and create user (Fortify `CreatesNewUsers`)           |
+| `ResetUserPassword`         | Validate and reset password (Fortify `ResetsUserPasswords`)    |
+| `IssueTokenForUser`         | Issue Sanctum personal access token, returns `TokenResult`     |
+| `CheckEmailExists`          | Check if email is registered                                   |
+| `FindUserByEmail`           | Retrieve user by email                                         |
+| `ResolveSocialIdentity`     | Safe social identity → user resolution (verified-email check)  |
+| `SocialRedirectAction`      | Generate OAuth redirect URL, returns `SocialRedirectResult`    |
+| `SocialCallbackAction`      | Handle OAuth callback via `ResolveSocialIdentity`              |
+| `CreateSocialAccountAction` | Create social account record via polymorphic relation          |
 
-Auth-kit configures Fortify under the hood. You get for free:
+## Result types
 
-- Login throttling (per email + IP)
-- Password reset (forgot/reset flow)
-- Email verification
-- Password confirmation
-- Two-factor authentication (when enabled)
-- Passkeys / WebAuthn (when enabled)
+**`AuthResult`** — returned by login actions:
 
-## Available actions
+```php
+AuthResult::passed($user)   // credentials valid
+AuthResult::failed()        // credentials invalid
+AuthResult::throttled($seconds)  // rate limited
+```
 
-| Action                      | Description                                                             |
-|-----------------------------|-------------------------------------------------------------------------|
-| `AttemptEmailPasswordLogin` | Verify email + password against a guard, with IP-aware rate limiting    |
-| `CheckEmailExists`          | Check whether an email address is registered                            |
-| `FindUserByEmail`           | Retrieve a user by email                                                |
-| `CreateNewUser`             | Validate and create a user (implements Fortify's `CreatesNewUsers`)     |
-| `ResetUserPassword`         | Validate and reset a password (implements Fortify's `ResetsUserPasswords`) |
-| `LoginUser`                 | Log an `Authenticatable` into the guard and regenerate the session      |
-| `LogoutUser`                | Log the current user out and invalidate the session                     |
-| `IssueTokenForUser`         | Issue a Sanctum personal access token                                   |
-| `ResolveSocialIdentity`     | Resolve a social identity to a user (safe email verification check)     |
-| `SocialRedirectAction`      | Generate OAuth redirect URL for a social provider                       |
-| `SocialCallbackAction`      | Handle OAuth callback via `ResolveSocialIdentity`                       |
-| `CreateSocialAccountAction` | Create a social account record via polymorphic relation                 |
+Check with `$result->isPassed()` or match on `$result->status` (`AuthStatus::Passed|Failed|Throttled`).
 
-### Supporting types
+**`TokenResult`** — returned by `IssueTokenForUser`:
 
-| Type                                      | Description                               |
-|-------------------------------------------|-------------------------------------------|
-| `AuthResult` + `AuthStatus`               | Passed / failed / throttled result object  |
-| `TokenResult`                             | User + plain text token from Sanctum       |
-| Abstract controllers                      | Thin base classes for the preset to extend |
+```php
+new TokenResult(user: $user, plainTextToken: $token)
+```
+
+**`SocialRedirectResult`** — returned by `SocialRedirectAction`:
+
+```php
+new SocialRedirectResult(url: $url)
+```
+
+## Abstract controllers
+
+Extend these to wire up your own routes. JSON responses are handled automatically.
+
+| Controller                                    | Overridable methods                   |
+|-----------------------------------------------|---------------------------------------|
+| `AbstractAttemptEmailPasswordLoginController` | `passed()`, `failed()`, `throttled()` |
+| `AbstractCheckEmailExistsController`          | `respond()`                           |
+| `AbstractLogoutController`                    | `loggedOut()`                         |
+| `AbstractRegisterController`                  | `registered()`                        |
+| `AbstractSocialRedirectController`            | `redirect()`                          |
+| `AbstractSocialCallbackController`            | `resolve()`, `passed()`, `failed()`   |
+
+## Social login
+
+`ResolveSocialIdentity` implements verified-email linking to prevent account takeover:
+
+1. Existing social account → returns user (updates tokens)
+2. Authenticated user → links social account
+3. Unverified email match → **returns null** (prevents takeover)
+4. Verified email match → auto-links
+5. No match → creates new user + social record
+
+### Social model
+
+Add to your `User` model:
+
+```php
+use Simtabi\Laranail\Auth\Models\Social;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+
+public function socials(): MorphMany
+{
+    return $this->morphMany(Social::class, 'socialable');
+}
+```
+
+Publish the migration:
+
+```bash
+php artisan vendor:publish --tag=auth-kit-social-migrations
+```
+
+## Usage
+
+### Session login (web)
+
+```php
+$result = app(AttemptEmailPasswordLogin::class)->execute(
+    new AttemptEmailPasswordLoginInput(
+        email: $request->string('email')->toString(),
+        password: $request->string('password')->toString(),
+        guard: 'web',
+        remember: $request->boolean('remember'),
+    )
+);
+
+if (! $result->isPassed()) {
+    return back()->withErrors(['email' => 'Invalid credentials']);
+}
+
+app(LoginUser::class)->execute($result->user, guard: 'web');
+return redirect()->intended('/dashboard');
+```
+
+### API token
+
+```php
+$tokenResult = app(IssueTokenForUser::class)->execute(
+    new IssueTokenForUserInput(user: $user, name: 'api-token')
+);
+
+return response()->json([
+    'token' => $tokenResult->plainTextToken,
+    'user'  => $tokenResult->user,
+]);
+```
+
+### Social redirect + callback
+
+```php
+$redirect = app(SocialRedirectAction::class)->execute(
+    new SocialRedirectActionInput(provider: SocialProvider::GOOGLE)
+);
+
+return redirect($redirect->url);
+
+// Callback:
+$result = app(SocialCallbackAction::class)->execute(
+    new SocialCallbackActionInput(
+        provider: SocialProvider::GOOGLE,
+        resolve: fn (SocialiteUser $socialUser) => User::firstOrCreate(
+            ['email' => $socialUser->getEmail()],
+            ['name' => $socialUser->getName()]
+        ),
+    )
+);
+```
 
 ## Frontend presets
 
-| Preset  | Status      |
-|---------|-------------|
-| Blade   | Available   |
-| React   | Roadmap     |
-| Vue     | Roadmap     |
-| Livewire| Roadmap     |
+| Preset  | Status    |
+|---------|-----------|
+| Blade   | Available |
+| React   | Roadmap   |
+| Vue     | Roadmap   |
 
 ## License
 
