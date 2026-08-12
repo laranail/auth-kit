@@ -28,10 +28,6 @@ class AuthKitServiceProvider extends ServiceProvider
 
         $this->app->bind(abstract: Contracts\LogoutUserInterface::class, concrete: Actions\LogoutUser::class);
 
-        // Registration actions
-        $this->app->bind(abstract: Contracts\CreatePendingEmailTokenInterface::class, concrete: Actions\CreatePendingEmailToken::class);
-        $this->app->bind(abstract: Contracts\VerifyPendingEmailTokenInterface::class, concrete: Actions\VerifyPendingEmailToken::class);
-        $this->app->bind(abstract: Contracts\SendPendingEmailTokenInterface::class, concrete: Actions\SendPendingEmailToken::class);
         // Social actions
         $this->app->bind(abstract: Contracts\SocialRedirectActionInterface::class, concrete: Actions\SocialRedirectAction::class);
         $this->app->bind(abstract: Contracts\SocialCallbackActionInterface::class, concrete: Actions\SocialCallbackAction::class);
@@ -50,11 +46,6 @@ class AuthKitServiceProvider extends ServiceProvider
         if (! $this->app->runningInConsole()) {
             return;
         }
-
-        $this->publishes(
-            paths: [__DIR__ . '/../database/migrations/pending_email_tokens' => database_path('migrations')],
-            groups: 'auth-kit-pending-email-token-migrations'
-        );
 
         $this->publishes(
             paths: [__DIR__ . '/../database/migrations/social' => database_path('migrations')],

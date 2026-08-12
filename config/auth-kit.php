@@ -12,11 +12,6 @@ return [
         'decay_minutes' => (int) env(key: 'AUTH_KIT_RATE_LIMIT_DECAY_MINUTES', default: 1),
     ],
 
-    'registration' => [
-        'token_length'      => (int) env(key: 'AUTH_KIT_REGISTRATION_TOKEN_LENGTH', default: 40),
-        'token_ttl_minutes' => (int) env(key: 'AUTH_KIT_REGISTRATION_TOKEN_TTL_MINUTES', default: 60),
-    ],
-
     'social' => [
         'google' => [
             'client_id'     => env(key: 'AUTH_KIT_GOOGLE_CLIENT_ID'),
