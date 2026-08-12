@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Services;
 
+use RuntimeException;
 use GuzzleHttp\RequestOptions;
 use SocialiteProviders\Manager\OAuth2\User;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
@@ -29,7 +30,13 @@ class PayPalSocialProvider extends AbstractProvider
             ],
         );
 
-        return json_decode(json: (string) $response->getBody(), associative: true);
+        $data = json_decode(json: (string) $response->getBody(), associative: true);
+
+        if (! is_array($data)) {
+            throw new RuntimeException('Unable to decode PayPal access token response.');
+        }
+
+        return $data;
     }
 
     protected function useSandbox(): bool
@@ -80,7 +87,13 @@ class PayPalSocialProvider extends AbstractProvider
             ],
         );
 
-        return json_decode(json: (string) $response->getBody(), associative: true);
+        $data = json_decode(json: (string) $response->getBody(), associative: true);
+
+        if (! is_array($data)) {
+            throw new RuntimeException('Unable to decode PayPal user info response.');
+        }
+
+        return $data;
     }
 
     protected function mapUserToObject(array $user): User
