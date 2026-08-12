@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Contracts;
 
+use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Support\AuthResult;
-use Simtabi\Laranail\Auth\Dtos\SocialCallbackActionInput;
 
 interface SocialCallbackActionInterface
 {
-    public function execute(SocialCallbackActionInput $input): AuthResult;
+    public function execute(Request $request, string $guard): AuthResult;
 }

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Actions;
 
+use Illuminate\Http\Request;
 use Illuminate\Cache\RateLimiter;
 use Simtabi\Laranail\Auth\Support\AuthResult;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
-use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
 use Simtabi\Laranail\Auth\Contracts\AttemptEmailPasswordLoginInterface;
 
 class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
@@ -18,9 +18,14 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
     ) {
     }
 
-    public function execute(AttemptEmailPasswordLoginInput $input): AuthResult
+    public function execute(Request $request, string $guard): AuthResult
     {
-        $key = 'login:' . $input->guard . ':' . mb_strtolower(string: $input->email) . ':' . ($input->ip ?? '_');
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $remember = (bool) $request->input('remember', default: false);
+        $ip = $request->ip();
+
+        $key = 'login:' . $guard . ':' . mb_strtolower(string: $email) . ':' . ($ip ?? '_');
         $maxAttempts = (int) config(key: 'auth-kit.rate_limit.max_attempts', default: 5);
         $decaySeconds = (int) config(key: 'auth-kit.rate_limit.decay_minutes', default: 1) * 60;
 
@@ -28,11 +33,11 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
             return AuthResult::throttled(retryAfterSeconds: $this->limiter->availableIn(key: $key));
         }
 
-        $guard = $this->auth->guard(name: $input->guard);
+        $guardInstance = $this->auth->guard(name: $guard);
 
-        $ok = $guard->attempt(
-            credentials: ['email' => $input->email, 'password' => $input->password],
-            remember: $input->remember,
+        $ok = $guardInstance->attempt(
+            credentials: ['email' => $email, 'password' => $password],
+            remember: $remember,
         );
 
         if (! $ok) {
@@ -43,6 +48,6 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
 
         $this->limiter->clear(key: $key);
 
-        return AuthResult::passed(user: $guard->user());
+        return AuthResult::passed(user: $guardInstance->user());
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Workbench\App\Models\User;
 use Simtabi\Laranail\Auth\Actions\FindUserByEmail;
-use Simtabi\Laranail\Auth\Dtos\FindUserByEmailInput;
 
 it(description: 'returns user when the email exists', closure: function (): void {
     $user = User::factory()->create([
@@ -12,9 +11,8 @@ it(description: 'returns user when the email exists', closure: function (): void
     ]);
 
     $action = app(FindUserByEmail::class);
-    $input = new FindUserByEmailInput(email: 'existing@example.com', guard: 'web');
 
-    $found = $action->execute($input);
+    $found = $action->execute(email: 'existing@example.com', guard: 'web');
 
     expect($found)->not->toBeNull()
         ->and($found->email)->toBe('existing@example.com');
@@ -22,9 +20,8 @@ it(description: 'returns user when the email exists', closure: function (): void
 
 it(description: 'returns null when the email does not exist', closure: function (): void {
     $action = app(FindUserByEmail::class);
-    $input = new FindUserByEmailInput(email: 'nobody@example.com', guard: 'web');
 
-    expect($action->execute($input))->toBeNull();
+    expect($action->execute(email: 'nobody@example.com', guard: 'web'))->toBeNull();
 });
 
 it(description: 'respects a custom guard', closure: function (): void {
@@ -33,12 +30,11 @@ it(description: 'respects a custom guard', closure: function (): void {
     ]);
 
     $action = app(FindUserByEmail::class);
-    $input = new FindUserByEmailInput(
+
+    $found = $action->execute(
         email: 'guardtest@example.com',
         guard: config('auth-kit.guard'),
     );
-
-    $found = $action->execute($input);
 
     expect($found)->not->toBeNull()
         ->and($found->email)->toBe('guardtest@example.com');

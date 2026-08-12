@@ -5,26 +5,28 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Actions;
 
 use Simtabi\Laranail\Auth\Models\Social;
-use Simtabi\Laranail\Auth\Dtos\CreateSocialAccountActionInput;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Simtabi\Laranail\Auth\Enums\SocialProvider;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Simtabi\Laranail\Auth\Contracts\CreateSocialAccountActionInterface;
 
 class CreateSocialAccountAction implements CreateSocialAccountActionInterface
 {
-    public function execute(CreateSocialAccountActionInput $input): Social
+    public function execute(Authenticatable $authenticatable, SocialProvider $provider, SocialiteUser $socialUser): Social
     {
         return Social::create([
-            'socialable_type' => get_class($input->authenticatable),
-            'socialable_id'   => $input->authenticatable->getAuthIdentifier(),
-            'provider'        => $input->provider,
-            'provider_id'     => $input->socialUser->getId(),
-            'name'            => $input->socialUser->getName(),
-            'nickname'        => $input->socialUser->getNickname(),
-            'email'           => $input->socialUser->getEmail(),
-            'avatar_path'     => $input->socialUser->getAvatar(),
-            'token'           => $input->socialUser->token,
-            'refresh_token'   => $input->socialUser->refreshToken,
-            'expires_at'      => $input->socialUser->expiresIn
-                ? now()->addSeconds($input->socialUser->expiresIn)
+            'socialable_type' => get_class($authenticatable),
+            'socialable_id'   => $authenticatable->getAuthIdentifier(),
+            'provider'        => $provider,
+            'provider_id'     => $socialUser->getId(),
+            'name'            => $socialUser->getName(),
+            'nickname'        => $socialUser->getNickname(),
+            'email'           => $socialUser->getEmail(),
+            'avatar_path'     => $socialUser->getAvatar(),
+            'token'           => $socialUser->token,
+            'refresh_token'   => $socialUser->refreshToken,
+            'expires_at'      => $socialUser->expiresIn
+                ? now()->addSeconds($socialUser->expiresIn)
                 : null,
         ]);
     }
