@@ -20,19 +20,7 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: Contracts\LoginUserInterface::class, concrete: Actions\LoginUser::class);
         $this->app->bind(abstract: Contracts\CreateNewUserInterface::class, concrete: Actions\CreateNewUser::class);
 
-        $this->app->bind(abstract: Contracts\AttemptUsernameLoginInterface::class, concrete: Actions\AttemptUsernameLogin::class);
-        $this->app->bind(abstract: Contracts\FindUserByUsernameInterface::class, concrete: Actions\FindUserByUsername::class);
-        $this->app->bind(abstract: Contracts\CheckUsernameExistsInterface::class, concrete: Actions\CheckUsernameExists::class);
-
-        $this->app->bind(abstract: Contracts\EnforceLoginRateLimitInterface::class, concrete: Actions\EnforceLoginRateLimitAction::class);
-
         $this->app->bind(abstract: Contracts\LogoutUserInterface::class, concrete: Actions\LogoutUser::class);
-
-        // Registration actions
-        $this->app->bind(abstract: Contracts\CreatePendingEmailTokenInterface::class, concrete: Actions\CreatePendingEmailToken::class);
-        $this->app->bind(abstract: Contracts\VerifyPendingEmailTokenInterface::class, concrete: Actions\VerifyPendingEmailToken::class);
-        $this->app->bind(abstract: Contracts\SendPendingEmailTokenInterface::class, concrete: Actions\SendPendingEmailToken::class);
-        $this->app->bind(abstract: Contracts\RegisterInterface::class, concrete: Actions\Register::class);
 
         // Social actions
         $this->app->bind(abstract: Contracts\SocialRedirectActionInterface::class, concrete: Actions\SocialRedirectAction::class);
@@ -52,11 +40,6 @@ class AuthKitServiceProvider extends ServiceProvider
         if (! $this->app->runningInConsole()) {
             return;
         }
-
-        $this->publishes(
-            paths: [__DIR__ . '/../database/migrations/pending_email_tokens' => database_path('migrations')],
-            groups: 'auth-kit-pending-email-token-migrations'
-        );
 
         $this->publishes(
             paths: [__DIR__ . '/../database/migrations/social' => database_path('migrations')],
