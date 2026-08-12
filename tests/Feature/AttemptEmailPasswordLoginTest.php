@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Workbench\App\Models\User;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
@@ -20,15 +21,17 @@ function loginRequest(array $data = [], ?string $ip = null): Request
 }
 
 it('returns passed when credentials are valid', function (): void {
+    $password = Str::random(16);
+
     $user = User::factory()->create([
         'email'    => 'ada@example.com',
-        'password' => bcrypt('secret'),
+        'password' => bcrypt($password),
     ]);
 
     $action = app(AttemptEmailPasswordLogin::class);
 
     $result = $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'secret']),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => $password]),
         guard: 'web',
     );
 
@@ -37,15 +40,17 @@ it('returns passed when credentials are valid', function (): void {
 });
 
 it('returns failed when credentials are wrong', function (): void {
+    $password = Str::random(16);
+
     User::factory()->create([
         'email'    => 'ada@example.com',
-        'password' => bcrypt('secret'),
+        'password' => bcrypt($password),
     ]);
 
     $action = app(AttemptEmailPasswordLogin::class);
 
     $result = $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong']),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password']),
         guard: 'web',
     );
 
@@ -57,11 +62,11 @@ it('throttles repeated failed credentials', function (): void {
 
     User::factory()->create([
         'email'    => 'ada@example.com',
-        'password' => bcrypt('secret'),
+        'password' => bcrypt(Str::random(16)),
     ]);
 
     $action = app(AttemptEmailPasswordLogin::class);
-    $request = loginRequest(['email' => 'ada@example.com', 'password' => 'wrong']);
+    $request = loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password']);
 
     $action->execute(request: $request, guard: 'web');
     $result = $action->execute(request: $request, guard: 'web');
@@ -74,18 +79,18 @@ it('throttles per ip address', function (): void {
 
     User::factory()->create([
         'email'    => 'ada@example.com',
-        'password' => bcrypt('secret'),
+        'password' => bcrypt(Str::random(16)),
     ]);
 
     $action = app(AttemptEmailPasswordLogin::class);
 
     $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong'], ip: '10.0.0.1'),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password'], ip: '10.0.0.1'),
         guard: 'web',
     );
 
     $result = $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong'], ip: '10.0.0.2'),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password'], ip: '10.0.0.2'),
         guard: 'web',
     );
 
@@ -98,18 +103,18 @@ it('throttles same ip with same email', function (): void {
 
     User::factory()->create([
         'email'    => 'ada@example.com',
-        'password' => bcrypt('secret'),
+        'password' => bcrypt(Str::random(16)),
     ]);
 
     $action = app(AttemptEmailPasswordLogin::class);
 
     $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong'], ip: '10.0.0.1'),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password'], ip: '10.0.0.1'),
         guard: 'web',
     );
 
     $result = $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong'], ip: '10.0.0.1'),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password'], ip: '10.0.0.1'),
         guard: 'web',
     );
 
@@ -119,27 +124,29 @@ it('throttles same ip with same email', function (): void {
 it('clears the throttle limit on successful login', function (): void {
     config()->set('auth-kit.rate_limit.max_attempts', 2);
 
+    $password = Str::random(16);
+
     User::factory()->create([
         'email'    => 'ada@example.com',
-        'password' => bcrypt('secret'),
+        'password' => bcrypt($password),
     ]);
 
     $action = app(AttemptEmailPasswordLogin::class);
 
     $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong']),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password']),
         guard: 'web',
     );
 
     $result = $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'secret']),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => $password]),
         guard: 'web',
     );
 
     expect($result->isPassed())->toBeTrue();
 
     $afterResult = $action->execute(
-        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong']),
+        request: loginRequest(['email' => 'ada@example.com', 'password' => 'wrong-password']),
         guard: 'web',
     );
 

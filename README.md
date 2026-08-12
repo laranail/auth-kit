@@ -99,7 +99,7 @@ Check with `$result->isPassed()` or match on `$result->status` (`AuthStatus::Pas
 **`TokenResult`** — returned by `IssueTokenForUser`:
 
 ```php
-new TokenResult(user: $user, plainTextToken: $token)
+new TokenResult(user: $user, token: $token)
 ```
 
 **`SocialRedirectResult`** — returned by `SocialRedirectAction`:
