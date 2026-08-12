@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Actions;
 
+use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
-use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
 use Simtabi\Laranail\Auth\Contracts\CheckEmailExistsInterface;
 
 class CheckEmailExists implements CheckEmailExistsInterface
@@ -15,10 +15,11 @@ class CheckEmailExists implements CheckEmailExistsInterface
     ) {
     }
 
-    public function execute(CheckEmailExistsInput $input): bool
+    public function execute(Request $request, string $guard): bool
     {
-        $provider = $this->auth->guard($input->guard)->getProvider();
+        $email = $request->input('email');
+        $provider = $this->auth->guard($guard)->getProvider();
 
-        return $provider->retrieveByCredentials(['email' => $input->email]) !== null;
+        return $provider->retrieveByCredentials(['email' => $email]) !== null;
     }
 }

@@ -7,7 +7,6 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
-use Simtabi\Laranail\Auth\Dtos\AttemptEmailPasswordLoginInput;
 use Simtabi\Laranail\Auth\Contracts\AttemptEmailPasswordLoginInterface;
 use Simtabi\Laranail\Auth\Http\Requests\AttemptEmailPasswordLoginRequest;
 
@@ -20,12 +19,8 @@ abstract class AbstractAttemptEmailPasswordLoginController extends AbstractAuthC
     public function store(AttemptEmailPasswordLoginRequest $request, AttemptEmailPasswordLoginInterface $action): mixed
     {
         $result = $action->execute(
-            input: new AttemptEmailPasswordLoginInput(
-                email: $request->validated(key: 'email'),
-                password: $request->validated(key: 'password'),
-                guard: $this->guard(),
-                remember: (bool) $request->validated(key: 'remember', default: false),
-            )
+            request: $request,
+            guard: $this->guard(),
         );
 
         return match ($result->status) {

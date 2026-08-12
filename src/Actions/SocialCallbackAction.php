@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Actions;
 
+use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Support\AuthResult;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Simtabi\Laranail\Auth\Dtos\SocialCallbackActionInput;
-use Simtabi\Laranail\Auth\Dtos\ResolveSocialIdentityInput;
+use Simtabi\Laranail\Auth\Enums\SocialProvider;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
 use Simtabi\Laranail\Auth\Contracts\SocialCallbackActionInterface;
 use Simtabi\Laranail\Auth\Contracts\ResolveSocialIdentityInterface;
@@ -20,15 +20,16 @@ class SocialCallbackAction implements SocialCallbackActionInterface
     ) {
     }
 
-    public function execute(SocialCallbackActionInput $input): AuthResult
+    public function execute(Request $request, string $guard): AuthResult
     {
-        $socialiteUser = $this->socialite->driver($input->provider->value)->user();
+        $provider = SocialProvider::from(value: $request->route('provider'));
+        $socialiteUser = $this->socialite->driver($provider->value)->user();
 
-        $user = $this->resolver->execute(new ResolveSocialIdentityInput(
-            provider: $input->provider,
+        $user = $this->resolver->execute(
+            provider: $provider,
             socialUser: $socialiteUser,
-            guard: $input->guard,
-        ));
+            guard: $guard,
+        );
 
         if (! $user instanceof Authenticatable) {
             return AuthResult::failed();

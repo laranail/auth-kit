@@ -157,12 +157,8 @@ php artisan vendor:publish --tag=auth-kit-social-migrations
 
 ```php
 $result = app(AttemptEmailPasswordLogin::class)->execute(
-    new AttemptEmailPasswordLoginInput(
-        email: $request->string('email')->toString(),
-        password: $request->string('password')->toString(),
-        guard: 'web',
-        remember: $request->boolean('remember'),
-    )
+    request: $request,
+    guard: 'web',
 );
 
 if (! $result->isPassed()) {
@@ -177,11 +173,12 @@ return redirect()->intended('/dashboard');
 
 ```php
 $tokenResult = app(IssueTokenForUser::class)->execute(
-    new IssueTokenForUserInput(user: $user, name: 'api-token')
+    user: $user,
+    name: 'api-token',
 );
 
 return response()->json([
-    'token' => $tokenResult->plainTextToken,
+    'token' => $tokenResult->token,
     'user'  => $tokenResult->user,
 ]);
 ```
@@ -190,20 +187,15 @@ return response()->json([
 
 ```php
 $redirect = app(SocialRedirectAction::class)->execute(
-    new SocialRedirectActionInput(provider: SocialProvider::GOOGLE)
+    request: $request,
 );
 
 return redirect($redirect->url);
 
 // Callback:
 $result = app(SocialCallbackAction::class)->execute(
-    new SocialCallbackActionInput(
-        provider: SocialProvider::GOOGLE,
-        resolve: fn (SocialiteUser $socialUser) => User::firstOrCreate(
-            ['email' => $socialUser->getEmail()],
-            ['name' => $socialUser->getName()]
-        ),
-    )
+    request: $request,
+    guard: 'web',
 );
 ```
 

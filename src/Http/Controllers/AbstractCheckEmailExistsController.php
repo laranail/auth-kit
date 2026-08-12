@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
 use Simtabi\Laranail\Auth\Contracts\CheckEmailExistsInterface;
 use Simtabi\Laranail\Auth\Http\Requests\CheckEmailExistsRequest;
 
@@ -14,10 +13,8 @@ abstract class AbstractCheckEmailExistsController extends AbstractAuthController
     public function __invoke(CheckEmailExistsRequest $request, CheckEmailExistsInterface $action): mixed
     {
         $exists = $action->execute(
-            input: new CheckEmailExistsInput(
-                email: $request->validated('email'),
-                guard: $this->guard(),
-            )
+            request: $request,
+            guard: $this->guard(),
         );
 
         if ($request->expectsJson()) {

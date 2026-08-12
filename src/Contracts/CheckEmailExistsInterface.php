@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Contracts;
 
-use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
+use Illuminate\Http\Request;
 
 interface CheckEmailExistsInterface
 {
-    public function execute(CheckEmailExistsInput $input): bool;
+    public function execute(Request $request, string $guard): bool;
 }

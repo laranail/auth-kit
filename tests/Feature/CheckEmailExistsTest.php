@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use Workbench\App\Models\User;
 use Simtabi\Laranail\Auth\Actions\CheckEmailExists;
-use Simtabi\Laranail\Auth\Dtos\CheckEmailExistsInput;
+
+function checkEmailRequest(string $email): Request
+{
+    return Request::create(uri: '/check-email', method: 'POST', parameters: ['email' => $email]);
+}
 
 it(description: 'returns true when the email exists', closure: function (): void {
     User::factory()->create([
@@ -12,16 +17,14 @@ it(description: 'returns true when the email exists', closure: function (): void
     ]);
 
     $action = app(CheckEmailExists::class);
-    $input = new CheckEmailExistsInput(email: 'existing@example.com', guard: 'web');
 
-    expect($action->execute($input))->toBeTrue();
+    expect($action->execute(request: checkEmailRequest('existing@example.com'), guard: 'web'))->toBeTrue();
 });
 
 it(description: 'returns false when the email does not exist', closure: function (): void {
     $action = app(CheckEmailExists::class);
-    $input = new CheckEmailExistsInput(email: 'nobody@example.com', guard: 'web');
 
-    expect($action->execute($input))->toBeFalse();
+    expect($action->execute(request: checkEmailRequest('nobody@example.com'), guard: 'web'))->toBeFalse();
 });
 
 it(description: 'respects a custom guard', closure: function (): void {
@@ -30,10 +33,9 @@ it(description: 'respects a custom guard', closure: function (): void {
     ]);
 
     $action = app(CheckEmailExists::class);
-    $input = new CheckEmailExistsInput(
-        email: 'guardtest@example.com',
-        guard: config('auth-kit.guard'),
-    );
 
-    expect($action->execute($input))->toBeTrue();
+    expect($action->execute(
+        request: checkEmailRequest('guardtest@example.com'),
+        guard: config('auth-kit.guard'),
+    ))->toBeTrue();
 });

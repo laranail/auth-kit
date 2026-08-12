@@ -7,21 +7,15 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 use Illuminate\Http\Request;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
-use Simtabi\Laranail\Auth\Enums\SocialProvider;
-use Simtabi\Laranail\Auth\Dtos\SocialCallbackActionInput;
 use Simtabi\Laranail\Auth\Contracts\SocialCallbackActionInterface;
 
 abstract class AbstractSocialCallbackController extends AbstractAuthController
 {
     public function __invoke(Request $request, SocialCallbackActionInterface $action): mixed
     {
-        $provider = SocialProvider::from(value: $request->route('provider'));
-
         $result = $action->execute(
-            input: new SocialCallbackActionInput(
-                provider: $provider,
-                guard: $this->guard(),
-            )
+            request: $request,
+            guard: $this->guard(),
         );
 
         if ($request->expectsJson()) {

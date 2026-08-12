@@ -7,7 +7,6 @@ use Simtabi\Laranail\Auth\Models\Social;
 use Simtabi\Laranail\Auth\Enums\SocialProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Simtabi\Laranail\Auth\Actions\CreateSocialAccountAction;
-use Simtabi\Laranail\Auth\Dtos\CreateSocialAccountActionInput;
 
 it(description: 'creates a social account with morph', closure: function (): void {
     $user = User::factory()->create();
@@ -26,11 +25,11 @@ it(description: 'creates a social account with morph', closure: function (): voi
 
     $action = app(abstract: CreateSocialAccountAction::class);
 
-    $social = $action->execute(input: new CreateSocialAccountActionInput(
+    $social = $action->execute(
         authenticatable: $user,
         provider: SocialProvider::GOOGLE,
         socialUser: $socialiteUser,
-    ));
+    );
 
     expect(value: $social)->toBeInstanceOf(class: Social::class)
         ->and(value: $social->socialable_type)->toBe(get_class($user))
@@ -55,11 +54,11 @@ it(description: 'morph relationship returns parent model', closure: function ():
 
     $action = app(abstract: CreateSocialAccountAction::class);
 
-    $social = $action->execute(input: new CreateSocialAccountActionInput(
+    $social = $action->execute(
         authenticatable: $user,
         provider: SocialProvider::GOOGLE,
         socialUser: $socialiteUser,
-    ));
+    );
 
     expect(value: $social->socialable->id)->toBe($user->id);
 });
@@ -77,11 +76,11 @@ it(description: 'stores encrypted tokens', closure: function (): void {
 
     $action = app(abstract: CreateSocialAccountAction::class);
 
-    $social = $action->execute(input: new CreateSocialAccountActionInput(
+    $social = $action->execute(
         authenticatable: $user,
         provider: SocialProvider::GOOGLE,
         socialUser: $socialiteUser,
-    ));
+    );
 
     // Reload from DB to check encrypted values
     $fresh = Social::find($social->id);
@@ -102,11 +101,11 @@ it(description: 'handles null expires_at', closure: function (): void {
 
     $action = app(abstract: CreateSocialAccountAction::class);
 
-    $social = $action->execute(input: new CreateSocialAccountActionInput(
+    $social = $action->execute(
         authenticatable: $user,
         provider: SocialProvider::GOOGLE,
         socialUser: $socialiteUser,
-    ));
+    );
 
     expect(value: $social->expires_at)->toBeNull();
 });

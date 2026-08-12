@@ -2,13 +2,23 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Workbench\App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
 use Simtabi\Laranail\Auth\Models\Social;
 use Simtabi\Laranail\Auth\Enums\SocialProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Simtabi\Laranail\Auth\Actions\SocialCallbackAction;
-use Simtabi\Laranail\Auth\Dtos\SocialCallbackActionInput;
+
+function callbackRequest(string $provider): Request
+{
+    $request = Request::create(uri: "/auth/social/{$provider}/callback", method: 'GET');
+    $request->setRouteResolver(fn () => (new Route('GET', "/auth/social/{provider}/callback", []))->bind($request));
+    $request->route()->setParameter('provider', $provider);
+
+    return $request;
+}
 
 beforeEach(function (): void {
     $this->socialiteUser = new SocialiteUser();
@@ -28,10 +38,10 @@ beforeEach(function (): void {
 it('creates a new user and social account when no match exists', function (): void {
     Socialite::fake(SocialProvider::GOOGLE->value, $this->socialiteUser);
 
-    $result = app(SocialCallbackAction::class)->execute(new SocialCallbackActionInput(
-        provider: SocialProvider::GOOGLE,
+    $result = app(SocialCallbackAction::class)->execute(
+        request: callbackRequest('google'),
         guard: 'web',
-    ));
+    );
 
     expect($result->isPassed())->toBeTrue()
         ->and($result->user->email)->toBe('john@example.com')
@@ -53,10 +63,10 @@ it('returns existing user when social account already exists', function (): void
         'refresh_token'   => 'old-refresh',
     ]);
 
-    $result = app(SocialCallbackAction::class)->execute(new SocialCallbackActionInput(
-        provider: SocialProvider::GOOGLE,
+    $result = app(SocialCallbackAction::class)->execute(
+        request: callbackRequest('google'),
         guard: 'web',
-    ));
+    );
 
     expect($result->isPassed())->toBeTrue()
         ->and($result->user->getAuthIdentifier())->toBe($existingUser->getAuthIdentifier());
@@ -74,10 +84,10 @@ it('returns failed when socialite user has no email', function (): void {
 
     Socialite::fake(SocialProvider::GOOGLE->value, $noEmailUser);
 
-    $result = app(SocialCallbackAction::class)->execute(new SocialCallbackActionInput(
-        provider: SocialProvider::GOOGLE,
+    $result = app(SocialCallbackAction::class)->execute(
+        request: callbackRequest('google'),
         guard: 'web',
-    ));
+    );
 
     expect($result->isPassed())->toBeFalse();
 });
