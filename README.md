@@ -18,12 +18,7 @@ composer require laranail/auth-kit
 php artisan vendor:publish --tag=auth-kit-config
 ```
 
-With the Blade preset:
-
-```bash
-composer require laranail/auth-preset
-php artisan laranail:authkit:install
-```
+For a ready-made Blade UI, install `laranail/auth-preset` instead.
 
 ## Configuration
 
@@ -119,7 +114,7 @@ Extend these to wire up your own routes. JSON responses are handled automaticall
 | `AbstractLogoutController`                    | `loggedOut()`                         |
 | `AbstractRegisterController`                  | `registered()`                        |
 | `AbstractSocialRedirectController`            | `redirect()`                          |
-| `AbstractSocialCallbackController`            | `resolve()`, `passed()`, `failed()`   |
+| `AbstractSocialCallbackController`            | `passed()`, `failed()`                    |
 
 ## Social login
 
@@ -199,13 +194,9 @@ $result = app(SocialCallbackAction::class)->execute(
 );
 ```
 
-## Frontend presets
+## Related packages
 
-| Preset  | Status    |
-|---------|-----------|
-| Blade   | Available |
-| React   | Roadmap   |
-| Vue     | Roadmap   |
+- `laranail/auth-preset` — Blade views + routes for this package
 
 ## License
 
