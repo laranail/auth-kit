@@ -12,6 +12,15 @@ return [
         'decay_minutes' => (int) env(key: 'AUTH_KIT_RATE_LIMIT_DECAY_MINUTES', default: 1),
     ],
 
+    'fortify' => [
+        'views' => false,
+
+        'features' => [
+            'reset-passwords',
+            'email-verification',
+        ],
+    ],
+
     'social' => [
         'google' => [
             'client_id'     => env(key: 'AUTH_KIT_GOOGLE_CLIENT_ID'),

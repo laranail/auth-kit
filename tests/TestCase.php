@@ -13,6 +13,8 @@ abstract class TestCase extends BaseTestCase
     {
         return [
             \Laravel\Socialite\SocialiteServiceProvider::class,
+            \Laravel\Fortify\FortifyServiceProvider::class,
+            \Laravel\Sanctum\SanctumServiceProvider::class,
             AuthKitServiceProvider::class,
         ];
     }
@@ -34,7 +36,8 @@ abstract class TestCase extends BaseTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__) . '/vendor/orchestra/testbench-core/laravel/migrations');
-        $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations/pending_email_tokens');
+        $this->loadMigrationsFrom(dirname(__DIR__) . '/vendor/laravel/fortify/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__) . '/vendor/laravel/sanctum/database/migrations');
         $this->loadMigrationsFrom(dirname(__DIR__) . '/database/migrations/social');
     }
 }

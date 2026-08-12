@@ -18,7 +18,9 @@
     ],
     "require": {
         "php": "^8.4 | ^8.5",
+        "laravel/fortify": "^1.38",
         "laravel/framework": "^13.0",
+        "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.0",
         "socialiteproviders/manager": "^4.4"
     },

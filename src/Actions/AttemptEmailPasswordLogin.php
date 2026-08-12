@@ -20,7 +20,7 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
 
     public function execute(AttemptEmailPasswordLoginInput $input): AuthResult
     {
-        $key = 'login:' . $input->guard . ':' . mb_strtolower(string: $input->email);
+        $key = 'login:' . $input->guard . ':' . mb_strtolower(string: $input->email) . ':' . ($input->ip ?? '_');
         $maxAttempts = (int) config(key: 'auth-kit.rate_limit.max_attempts', default: 5);
         $decaySeconds = (int) config(key: 'auth-kit.rate_limit.decay_minutes', default: 1) * 60;
 
