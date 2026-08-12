@@ -11,6 +11,7 @@ class AttemptEmailPasswordLoginInput
         public string $password,
         public string $guard,
         public bool $remember = false,
+        public ?string $ip = null,
     ) {
     }
 }
