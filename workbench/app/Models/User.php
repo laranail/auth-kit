@@ -6,15 +6,18 @@ namespace Workbench\App\Models;
 
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\Contracts\PasskeyUser;
 use Workbench\Database\Factories\UserFactory;
+use Simtabi\Laranail\Auth\PasskeyAuthenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements PasskeyUser
 {
     use HasApiTokens;
     use HasFactory;
     use Notifiable;
+    use PasskeyAuthenticatable;
 
     protected $fillable = [
         'name',

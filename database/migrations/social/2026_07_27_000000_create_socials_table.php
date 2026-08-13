@@ -11,7 +11,7 @@ return new class () extends Migration {
     {
         Schema::create(table: 'socials', callback: function (Blueprint $table): void {
             $table->id();
-            $table->morphs('socialable');
+            $table->morphs(name: 'socialable');
             $table->string(column: 'provider');
             $table->string(column: 'provider_id');
             $table->string(column: 'name')->nullable();
@@ -29,6 +29,6 @@ return new class () extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('socials');
+        Schema::dropIfExists(table: 'socials');
     }
 };

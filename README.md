@@ -2,7 +2,7 @@
 
 Headless authentication for Laravel 13+. No views, routes, or controllers.
 
-- **Fortify-backed** — password reset, profile updates, password updates, email verification, login throttling
+- **Fortify-backed** — password reset, profile updates, password updates, email verification, passkeys, login throttling
 - **Sanctum-ready** — API token issuance via `IssueTokenForUser`
 - **Social login** — Google, Facebook, X, LinkedIn, PayPal via Socialite
 - **Composable** — separate actions for credential check vs session login
@@ -47,7 +47,7 @@ return [
 
     'fortify' => [
         'views'    => false,
-        'features' => ['reset-passwords', 'update-profile-information', 'update-passwords', 'email-verification'],
+        'features' => ['reset-passwords', 'update-profile-information', 'update-passwords', 'email-verification', 'passkeys'],
     ],
 
     'social' => [
@@ -61,6 +61,54 @@ return [
     ],
 ];
 ```
+
+Remove `passkeys` from `auth-kit.fortify.features` to disable Fortify's passkey routes. Auth Kit only enables and configures Fortify; passkey ceremonies, responses, and persistence remain provided by Fortify and `laravel/passkeys`.
+
+## Passkeys
+
+Passkey support uses Fortify's native integration with `laravel/passkeys`. It is stateful and requires the consuming application's authenticatable model to implement Fortify's `PasskeyUser` contract and use Auth Kit's morph-aware `PasskeyAuthenticatable` trait:
+
+```php
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Simtabi\Laranail\Auth\PasskeyAuthenticatable;
+
+class User extends Authenticatable implements PasskeyUser
+{
+    use PasskeyAuthenticatable;
+}
+```
+
+The published migration stores ownership in `passkeyable_type` and `passkeyable_id`, so the same passkey implementation can be used by users, admins, or another authenticatable model. Auth Kit configures its morph-aware `Passkey` model for Fortify and retains the vendor package's WebAuthn actions, controllers, responses, and credential validation.
+
+Publish Auth Kit's passkeys migration in the consuming application and run it:
+
+```bash
+php artisan vendor:publish --tag=auth-kit-passkey-migrations
+php artisan migrate
+```
+
+Do not publish Fortify's migration tag for passkeys; Auth Kit owns this table migration while Fortify and `laravel/passkeys` provide the model and WebAuthn behavior.
+
+Configure the relying party and allowed browser origins in `config/fortify.php`. The defaults use the host and URL from `APP_URL`; set them explicitly for production HTTPS domains when necessary:
+
+```php
+'passkeys' => [
+    'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
+    'allowed_origins'   => [config('app.url')],
+    'user_handle_secret' => env('PASSKEYS_USER_HANDLE_SECRET', config('app.key')),
+    'timeout' => 60000,
+],
+```
+
+Fortify's passkey management routes honor the `fortify-options.confirmPassword` setting and the `passkeys` rate limiter in `fortify.limiters`. Passkey login and confirmation require the configured stateful guard and session, so Auth Kit does not expose equivalent Sanctum API endpoints.
+
+The browser ceremony is application-owned. Install the official client and connect it to Fortify's canonical route names; Auth Kit does not bundle JavaScript or a build pipeline:
+
+```bash
+npm install @laravel/passkeys
+```
+
+The application client should use Fortify's `/passkeys/login/options`, `/passkeys/login`, `/passkeys/confirm/options`, `/passkeys/confirm`, `/user/passkeys/options`, `/user/passkeys`, and `/user/passkeys/{passkey}` endpoints. Keep the browser origin, relying-party ID, and `APP_URL` aligned or WebAuthn validation will fail.
 
 ## Actions
 
