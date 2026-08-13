@@ -4,10 +4,20 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
+use Simtabi\Laranail\Auth\Support\AuthKit;
+
 abstract class AbstractAuthController
 {
     protected function guard(): string
     {
-        return config(key: 'auth-kit.guard');
+        return AuthKit::guard();
+    }
+
+    protected function jsonResponse(string $status, mixed $data = [], int $code = 200): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(data: [
+            'status' => $status,
+            'data'   => $data,
+        ], status: $code);
     }
 }

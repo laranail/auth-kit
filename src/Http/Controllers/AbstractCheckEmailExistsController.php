@@ -18,11 +18,14 @@ abstract class AbstractCheckEmailExistsController extends AbstractAuthController
         );
 
         if ($request->expectsJson()) {
-            return response()->json(data: ['exists' => $exists]);
+            return $this->jsonResponse(status: 'passed', data: ['exists' => $exists]);
         }
 
         return $this->respond(request: $request, exists: $exists);
     }
 
-    abstract protected function respond(Request $request, bool $exists): mixed;
+    protected function respond(Request $request, bool $exists): mixed
+    {
+        return response()->json(data: ['exists' => $exists]);
+    }
 }
