@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use Simtabi\Laranail\Auth\Support\AuthKit;
 
 abstract class AbstractEmailVerificationNotificationController extends AbstractAuthController

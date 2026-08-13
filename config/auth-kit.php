@@ -17,6 +17,7 @@ return [
 
         'features' => [
             'reset-passwords',
+            'update-passwords',
             'email-verification',
         ],
     ],

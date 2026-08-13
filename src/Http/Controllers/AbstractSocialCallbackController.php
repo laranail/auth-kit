@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
-use Simtabi\Laranail\Auth\Support\AuthKit;
 use Illuminate\Http\Request;
+use Simtabi\Laranail\Auth\Support\AuthKit;
 use Simtabi\Laranail\Auth\Enums\AuthStatus;
 use Simtabi\Laranail\Auth\Support\AuthResult;
 use Simtabi\Laranail\Auth\Contracts\LoginUserInterface;

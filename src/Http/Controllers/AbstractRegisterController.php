@@ -6,8 +6,8 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Simtabi\Laranail\Auth\Support\AuthKit;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Simtabi\Laranail\Auth\Contracts\LoginUserInterface;
 use Laravel\Fortify\Contracts\CreatesNewUsers as FortifyCreateNewUser;
 
