@@ -15,8 +15,15 @@ abstract class AbstractSocialRedirectController extends AbstractAuthController
             request: $request,
         );
 
+        if ($request->expectsJson()) {
+            return $this->jsonResponse(status: 'passed', data: ['url' => $result->url]);
+        }
+
         return $this->redirect(request: $request, url: $result->url);
     }
 
-    abstract protected function redirect(Request $request, string $url): mixed;
+    protected function redirect(Request $request, string $url): mixed
+    {
+        return redirect()->to(path: $url);
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Simtabi\Laranail\Auth\Support\AuthKit;
 use Simtabi\Laranail\Auth\Contracts\LogoutUserInterface;
 
 abstract class AbstractLogoutController extends AbstractAuthController
@@ -13,8 +14,15 @@ abstract class AbstractLogoutController extends AbstractAuthController
     {
         $action->execute(guard: $this->guard());
 
+        if ($request->expectsJson()) {
+            return $this->jsonResponse(status: 'passed', data: ['message' => 'Logged out successfully.']);
+        }
+
         return $this->loggedOut(request: $request);
     }
 
-    abstract protected function loggedOut(Request $request): mixed;
+    protected function loggedOut(Request $request): mixed
+    {
+        return redirect()->to(path: AuthKit::afterLogoutRedirect());
+    }
 }
