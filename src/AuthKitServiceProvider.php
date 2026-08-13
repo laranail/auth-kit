@@ -4,23 +4,15 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth;
 
+use Laravel\Fortify\Fortify;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Laravel\Fortify\Contracts\ResetsUserPasswords;
-use Laravel\Fortify\Contracts\UpdatesUserPasswords;
-use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
 class AuthKitServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->mergeConfigFrom(path: __DIR__ . '/../config/auth-kit.php', key: 'auth-kit');
-
-        $this->app->bind(abstract: CreatesNewUsers::class, concrete: Actions\CreateNewUser::class);
-        $this->app->bind(abstract: ResetsUserPasswords::class, concrete: Actions\ResetUserPassword::class);
-        $this->app->bind(abstract: UpdatesUserPasswords::class, concrete: Actions\UpdateUserPassword::class);
-        $this->app->bind(abstract: UpdatesUserProfileInformation::class, concrete: Actions\UpdateUserProfileInformation::class);
 
         $this->app->bind(abstract: Contracts\AttemptEmailPasswordLoginInterface::class, concrete: Actions\AttemptEmailPasswordLogin::class);
         $this->app->bind(abstract: Contracts\CheckEmailExistsInterface::class, concrete: Actions\CheckEmailExists::class);
@@ -48,6 +40,11 @@ class AuthKitServiceProvider extends ServiceProvider
         config()->set(key: 'fortify.guard', value: config(key: 'auth-kit.guard', default: 'web'));
         config()->set(key: 'fortify.views', value: config(key: 'auth-kit.fortify.views', default: false));
         config()->set(key: 'fortify.features', value: config(key: 'auth-kit.fortify.features', default: []));
+
+        Fortify::createUsersUsing(callback: Actions\CreateNewUser::class);
+        Fortify::updateUserProfileInformationUsing(callback: Actions\UpdateUserProfileInformation::class);
+        Fortify::updateUserPasswordsUsing(callback: Actions\UpdateUserPassword::class);
+        Fortify::resetUserPasswordsUsing(callback: Actions\ResetUserPassword::class);
     }
 
     private function registerMigrations(): void
@@ -57,7 +54,7 @@ class AuthKitServiceProvider extends ServiceProvider
         }
 
         $this->publishes(
-            paths: [__DIR__ . '/../database/migrations/social' => database_path('migrations')],
+            paths: [__DIR__ . '/../database/migrations/social' => database_path(path: 'migrations')],
             groups: 'auth-kit-social-migrations'
         );
     }
@@ -65,7 +62,7 @@ class AuthKitServiceProvider extends ServiceProvider
     private function registerConfig(): void
     {
         foreach (config(key: 'auth-kit.social', default: []) as $provider => $providerConfig) {
-            if (is_array($providerConfig)) {
+            if (is_array(value: $providerConfig)) {
                 config()->set(key: "services.{$provider}", value: $providerConfig);
             }
         }
@@ -75,7 +72,7 @@ class AuthKitServiceProvider extends ServiceProvider
         }
 
         $this->publishes(
-            paths: [__DIR__ . '/../config/auth-kit.php' => config_path('auth-kit.php')],
+            paths: [__DIR__ . '/../config/auth-kit.php' => config_path(path: 'auth-kit.php')],
             groups: 'auth-kit-config'
         );
     }
