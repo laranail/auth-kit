@@ -2,7 +2,7 @@
 
 Headless authentication for Laravel 13+. No views, routes, or controllers.
 
-- **Fortify-backed** — password reset, email verification, login throttling
+- **Fortify-backed** — password reset, password updates, email verification, login throttling
 - **Sanctum-ready** — API token issuance via `IssueTokenForUser`
 - **Social login** — Google, Facebook, X, LinkedIn, PayPal via Socialite
 - **Composable** — separate actions for credential check vs session login
@@ -47,7 +47,7 @@ return [
 
     'fortify' => [
         'views'    => false,
-        'features' => ['reset-passwords', 'email-verification'],
+        'features' => ['reset-passwords', 'update-passwords', 'email-verification'],
     ],
 
     'social' => [
@@ -71,6 +71,7 @@ return [
 | `LogoutUser`                | Log out + invalidate session                                   |
 | `CreateNewUser`             | Validate and create user (Fortify `CreatesNewUsers`)           |
 | `ResetUserPassword`         | Validate and reset password (Fortify `ResetsUserPasswords`)    |
+| `UpdateUserPassword`         | Validate and update password (Fortify `UpdatesUserPasswords`)  |
 | `IssueTokenForUser`         | Issue Sanctum personal access token, returns `TokenResult`     |
 | `CheckEmailExists`          | Check if email is registered                                   |
 | `FindUserByEmail`           | Retrieve user by email                                         |

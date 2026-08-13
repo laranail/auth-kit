@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Http\Controllers;
 
-use Illuminate\Contracts\Auth\PasswordBroker;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use Simtabi\Laranail\Auth\Support\AuthKit;
+use Illuminate\Contracts\Auth\PasswordBroker;
 
 abstract class AbstractPasswordResetLinkController extends AbstractAuthController
 {
