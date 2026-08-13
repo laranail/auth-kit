@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Fortify\Contracts\ResetsUserPasswords;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
+use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
 class AuthKitServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,7 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: CreatesNewUsers::class, concrete: Actions\CreateNewUser::class);
         $this->app->bind(abstract: ResetsUserPasswords::class, concrete: Actions\ResetUserPassword::class);
         $this->app->bind(abstract: UpdatesUserPasswords::class, concrete: Actions\UpdateUserPassword::class);
+        $this->app->bind(abstract: UpdatesUserProfileInformation::class, concrete: Actions\UpdateUserProfileInformation::class);
 
         $this->app->bind(abstract: Contracts\AttemptEmailPasswordLoginInterface::class, concrete: Actions\AttemptEmailPasswordLogin::class);
         $this->app->bind(abstract: Contracts\CheckEmailExistsInterface::class, concrete: Actions\CheckEmailExists::class);
