@@ -20,6 +20,7 @@ return [
             'update-profile-information',
             'update-passwords',
             'email-verification',
+            'passkeys',
         ],
     ],
 

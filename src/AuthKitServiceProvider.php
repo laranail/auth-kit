@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Simtabi\Laranail\Auth;
 
 use Laravel\Fortify\Fortify;
+use Laravel\Passkeys\Passkeys;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Simtabi\Laranail\Auth\Models\Passkey;
 
 class AuthKitServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->mergeConfigFrom(path: __DIR__ . '/../config/auth-kit.php', key: 'auth-kit');
+
+        Passkeys::usePasskeyModel(Passkey::class);
 
         $this->app->bind(abstract: Contracts\AttemptEmailPasswordLoginInterface::class, concrete: Actions\AttemptEmailPasswordLogin::class);
         $this->app->bind(abstract: Contracts\CheckEmailExistsInterface::class, concrete: Actions\CheckEmailExists::class);
@@ -56,6 +60,11 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->publishes(
             paths: [__DIR__ . '/../database/migrations/social' => database_path(path: 'migrations')],
             groups: 'auth-kit-social-migrations'
+        );
+
+        $this->publishes(
+            paths: [__DIR__ . '/../database/migrations/passkeys' => database_path(path: 'migrations')],
+            groups: 'auth-kit-passkey-migrations'
         );
     }
 
