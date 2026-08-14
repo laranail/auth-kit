@@ -16,9 +16,10 @@ abstract class AbstractNewPasswordController extends AbstractAuthController
     public function store(Request $request): mixed
     {
         $request->validate([
-            'token'    => 'required',
-            'email'    => 'required|email',
-            'password' => 'required|confirmed',
+            'token'                                                                   => 'required',
+            'email'                                                                   => 'required|email',
+            'password'                                                                => 'required|confirmed',
+            config(key: 'auth-kit.turnstile.input', default: 'cf-turnstile-response') => AuthKit::turnstileRules(),
         ]);
 
         $credentials = $request->only('email', 'password', 'password_confirmation', 'token');

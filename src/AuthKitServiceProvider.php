@@ -9,14 +9,22 @@ use Laravel\Passkeys\Passkeys;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Simtabi\Laranail\Auth\Models\Passkey;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AuthKitServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(path: __DIR__ . '/../config/auth-kit.php', key: 'auth-kit');
+        $this->mergeConfigFrom(path: __DIR__.'/../config/auth-kit.php', key: 'auth-kit');
 
         Passkeys::usePasskeyModel(Passkey::class);
+
+        $this->app->singleton(Services\Turnstile::class, function (): Services\Turnstile {
+            return new Services\Turnstile(
+                url: (string) config(key: 'auth-kit.turnstile.url'),
+                secretKey: (string) config(key: 'auth-kit.turnstile.secret_key'),
+            );
+        });
 
         $this->app->bind(abstract: Contracts\AttemptEmailPasswordLoginInterface::class, concrete: Actions\AttemptEmailPasswordLogin::class);
         $this->app->bind(abstract: Contracts\CheckEmailExistsInterface::class, concrete: Actions\CheckEmailExists::class);
@@ -58,12 +66,12 @@ class AuthKitServiceProvider extends ServiceProvider
         }
 
         $this->publishes(
-            paths: [__DIR__ . '/../database/migrations/social' => database_path(path: 'migrations')],
+            paths: [__DIR__.'/../database/migrations/social' => database_path(path: 'migrations')],
             groups: 'auth-kit-social-migrations'
         );
 
         $this->publishes(
-            paths: [__DIR__ . '/../database/migrations/passkeys' => database_path(path: 'migrations')],
+            paths: [__DIR__.'/../database/migrations/passkeys' => database_path(path: 'migrations')],
             groups: 'auth-kit-passkey-migrations'
         );
     }
@@ -81,7 +89,7 @@ class AuthKitServiceProvider extends ServiceProvider
         }
 
         $this->publishes(
-            paths: [__DIR__ . '/../config/auth-kit.php' => config_path(path: 'auth-kit.php')],
+            paths: [__DIR__.'/../config/auth-kit.php' => config_path(path: 'auth-kit.php')],
             groups: 'auth-kit-config'
         );
     }
@@ -89,8 +97,8 @@ class AuthKitServiceProvider extends ServiceProvider
     private function registerPayPalProvider(): void
     {
         Event::listen(
-            events: \SocialiteProviders\Manager\SocialiteWasCalled::class,
-            listener: function (\SocialiteProviders\Manager\SocialiteWasCalled $event): void {
+            events: SocialiteWasCalled::class,
+            listener: function (SocialiteWasCalled $event): void {
                 $event->extendSocialite(
                     providerName: 'paypal',
                     providerClass: Services\PayPalSocialProvider::class,

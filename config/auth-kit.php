@@ -12,6 +12,14 @@ return [
         'decay_minutes' => (int) env(key: 'AUTH_KIT_RATE_LIMIT_DECAY_MINUTES', default: 1),
     ],
 
+    'turnstile' => [
+        'enabled'    => (bool) env(key: 'AUTH_KIT_TURNSTILE_ENABLED', default: false),
+        'site_key'   => env(key: 'TURNSTILE_SITE_KEY'),
+        'secret_key' => env(key: 'TURNSTILE_SECRET_KEY'),
+        'url'        => env(key: 'TURNSTILE_URL', default: 'https://challenges.cloudflare.com/turnstile/v0/siteverify'),
+        'input'      => 'cf-turnstile-response',
+    ],
+
     'fortify' => [
         'views' => false,
 
