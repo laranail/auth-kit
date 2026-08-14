@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Simtabi\Laranail\Auth\Support\AuthKit;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Simtabi\Laranail\Auth\Support\UserModelResolver;
 use Laravel\Fortify\Contracts\CreatesNewUsers as FortifyCreateNewUser;
@@ -21,11 +22,13 @@ class CreateNewUser implements FortifyCreateNewUser
 
         Validator::make(
             data: $input,
-            rules: [
+            rules: array_merge([
                 'name'     => ['required', 'string', 'max:255'],
                 'email'    => ['required', 'string', 'email', 'max:255', Rule::unique(table: $model)],
                 'password' => ['required', 'string', Password::default(), 'confirmed'],
-            ]
+            ], [
+                config(key: 'auth-kit.turnstile.input', default: 'cf-turnstile-response') => AuthKit::turnstileRules(),
+            ])
         )->validate();
 
         /** @var \Illuminate\Database\Eloquent\Model&Authenticatable $user */

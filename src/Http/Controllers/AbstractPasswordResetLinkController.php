@@ -7,6 +7,7 @@ namespace Simtabi\Laranail\Auth\Http\Controllers;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Simtabi\Laranail\Auth\Support\AuthKit;
 use Illuminate\Contracts\Auth\PasswordBroker;
 
 abstract class AbstractPasswordResetLinkController extends AbstractAuthController
@@ -14,7 +15,8 @@ abstract class AbstractPasswordResetLinkController extends AbstractAuthControlle
     public function store(Request $request): mixed
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'                                                                   => 'required|email',
+            config(key: 'auth-kit.turnstile.input', default: 'cf-turnstile-response') => AuthKit::turnstileRules(),
         ]);
 
         $email = $request->input('email');

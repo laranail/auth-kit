@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Simtabi\Laranail\Auth\Support;
 
+use Simtabi\Laranail\Auth\Rules\TurnstileRule;
+
 class AuthKit
 {
     public static function guard(): string
@@ -39,5 +41,22 @@ class AuthKit
     public static function afterEmailVerificationRedirect(): string
     {
         return self::redirect('after_email_verification', '/dashboard?verified=1');
+    }
+
+    public static function turnstileRules(): array
+    {
+        if (! config(key: 'auth-kit.turnstile.enabled', default: false)) {
+            return [];
+        }
+
+        $route = request()->route();
+        if ($route === null || ! in_array('web', (array) $route->middleware(), true)) {
+            return [];
+        }
+
+        return [
+            'required',
+            new TurnstileRule(),
+        ];
     }
 }
