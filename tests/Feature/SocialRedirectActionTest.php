@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Validator;
 use Simtabi\Laranail\Auth\Enums\SocialProvider;
+use Simtabi\Laranail\Enumerator\Rules\EnumValue;
 use Simtabi\Laranail\Auth\Actions\SocialRedirectAction;
 
 function redirectRequest(string $provider): Request
@@ -65,4 +67,34 @@ it(description: 'returns redirect url for paypal', closure: function (): void {
     $result = $action->execute(request: redirectRequest('paypal'));
 
     expect(value: $result->url)->toBeString()->not->toBeEmpty();
+});
+
+it('exposes Enumerator labels and collection helpers without changing provider values', function (): void {
+    expect(SocialProvider::values())->toBe([
+        'google',
+        'facebook',
+        'twitter',
+        'linkedin',
+        'paypal',
+    ])
+        ->and(SocialProvider::labels())->toBe([
+            'google'   => 'Google',
+            'facebook' => 'Facebook',
+            'twitter'  => 'X (Twitter)',
+            'linkedin' => 'LinkedIn',
+            'paypal'   => 'PayPal',
+        ])
+        ->and(SocialProvider::collect()->flatValues())->toBe(SocialProvider::values())
+        ->and(SocialProvider::GOOGLE->label())->toBe('Google');
+});
+
+it('validates social provider values with Enumerator', function (): void {
+    expect(Validator::make(
+        data: ['provider' => 'google'],
+        rules: ['provider' => [new EnumValue(SocialProvider::class)]],
+    )->passes())->toBeTrue()
+        ->and(Validator::make(
+            data: ['provider' => 'github'],
+            rules: ['provider' => [new EnumValue(SocialProvider::class)]],
+        )->fails())->toBeTrue();
 });
