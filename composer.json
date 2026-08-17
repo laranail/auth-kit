@@ -22,6 +22,7 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.0",
+        "laranail/enumerator": "dev-main",
         "socialiteproviders/manager": "^4.4"
     },
     "require-dev": {
@@ -51,6 +52,12 @@
             ]
         }
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/laranail/enumerator.git"
+        }
+    ],
     "scripts": {
         "format": [
             "vendor/bin/pint --parallel"
