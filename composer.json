@@ -22,6 +22,7 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.0",
+        "laranail/package-tools": "dev-main",
         "laranail/enumerator": "dev-main",
         "socialiteproviders/manager": "^4.4"
     },
@@ -55,7 +56,15 @@
     "repositories": [
         {
             "type": "vcs",
+            "url": "https://github.com/laranail/console.git"
+        },
+        {
+            "type": "vcs",
             "url": "https://github.com/laranail/enumerator.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/laranail/package-tools.git"
         }
     ],
     "scripts": {

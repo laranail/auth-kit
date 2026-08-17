@@ -7,13 +7,32 @@ namespace Simtabi\Laranail\Auth;
 use Laravel\Fortify\Fortify;
 use Laravel\Passkeys\Passkeys;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\ServiceProvider;
 use Simtabi\Laranail\Auth\Models\Passkey;
+use Simtabi\Laranail\Package\Tools\Package;
 use SocialiteProviders\Manager\SocialiteWasCalled;
+use Simtabi\Laranail\Package\Tools\Providers\PackageServiceProvider;
 
-class AuthKitServiceProvider extends ServiceProvider
+class AuthKitServiceProvider extends PackageServiceProvider
 {
-    public function register(): void
+    public function configurePackage(Package $package): void
+    {
+        $package
+            ->name('laranail/auth-kit')
+            ->publish(
+                paths: ['config/auth-kit.php' => config_path(path: 'auth-kit.php')],
+                tag: 'auth-kit-config',
+            )
+            ->publish(
+                paths: ['database/migrations/social' => database_path(path: 'migrations')],
+                tag: 'auth-kit-social-migrations',
+            )
+            ->publish(
+                paths: ['database/migrations/passkeys' => database_path(path: 'migrations')],
+                tag: 'auth-kit-passkey-migrations',
+            );
+    }
+
+    public function packageRegistered(): void
     {
         $this->mergeConfigFrom(path: __DIR__.'/../config/auth-kit.php', key: 'auth-kit');
 
@@ -39,10 +58,9 @@ class AuthKitServiceProvider extends ServiceProvider
         $this->app->bind(abstract: Contracts\ResolveSocialIdentityInterface::class, concrete: Actions\ResolveSocialIdentity::class);
     }
 
-    public function boot(): void
+    public function packageBooted(): void
     {
         $this->configureFortify();
-        $this->registerMigrations();
         $this->registerConfig();
         $this->registerPayPalProvider();
     }
@@ -59,23 +77,6 @@ class AuthKitServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(callback: Actions\ResetUserPassword::class);
     }
 
-    private function registerMigrations(): void
-    {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
-
-        $this->publishes(
-            paths: [__DIR__.'/../database/migrations/social' => database_path(path: 'migrations')],
-            groups: 'auth-kit-social-migrations'
-        );
-
-        $this->publishes(
-            paths: [__DIR__.'/../database/migrations/passkeys' => database_path(path: 'migrations')],
-            groups: 'auth-kit-passkey-migrations'
-        );
-    }
-
     private function registerConfig(): void
     {
         foreach (config(key: 'auth-kit.social', default: []) as $provider => $providerConfig) {
@@ -83,15 +84,6 @@ class AuthKitServiceProvider extends ServiceProvider
                 config()->set(key: "services.{$provider}", value: $providerConfig);
             }
         }
-
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
-
-        $this->publishes(
-            paths: [__DIR__.'/../config/auth-kit.php' => config_path(path: 'auth-kit.php')],
-            groups: 'auth-kit-config'
-        );
     }
 
     private function registerPayPalProvider(): void
