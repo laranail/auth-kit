@@ -39,6 +39,22 @@ it('returns passed when credentials are valid', function (): void {
         ->and($result->user?->getAuthIdentifier())->toBe($user->getAuthIdentifier());
 });
 
+it('validates credentials without logging the user into the session', function (): void {
+    $password = Str::random(16);
+    User::factory()->create([
+        'email'    => 'ada@example.com',
+        'password' => bcrypt($password),
+    ]);
+
+    $result = app(AttemptEmailPasswordLogin::class)->execute(
+        request: loginRequest(['email' => 'ada@example.com', 'password' => $password]),
+        guard: 'web',
+    );
+
+    expect($result->isPassed())->toBeTrue()
+        ->and(auth()->guard('web')->check())->toBeFalse();
+});
+
 it('returns failed when credentials are wrong', function (): void {
     $password = Str::random(16);
 

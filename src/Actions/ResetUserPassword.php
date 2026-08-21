@@ -18,7 +18,12 @@ class ResetUserPassword implements FortifyResetUserPassword
         ])->validate();
 
         $user->forceFill([
-            'password' => Hash::make($input['password']),
+            'password'       => Hash::make($input['password']),
+            'remember_token' => null,
         ])->save();
+
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
     }
 }

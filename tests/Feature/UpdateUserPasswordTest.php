@@ -26,7 +26,11 @@ it('binds the Fortify password updater to Auth Kit', function (): void {
 });
 
 it('updates the password when the current password is valid', function (): void {
-    $user = User::factory()->create(['password' => Hash::make('old-password')]);
+    $user = User::factory()->create([
+        'password'       => Hash::make('old-password'),
+        'remember_token' => 'stolen-remember-token',
+    ]);
+    $user->createToken('stolen-token');
 
     $this->actingAs($user);
 
@@ -37,7 +41,9 @@ it('updates the password when the current password is valid', function (): void 
     ]);
 
     expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue()
-        ->and(Hash::check('old-password', $user->fresh()->password))->toBeFalse();
+        ->and(Hash::check('old-password', $user->fresh()->password))->toBeFalse()
+        ->and($user->fresh()->remember_token)->toBeNull()
+        ->and($user->fresh()->tokens()->count())->toBe(0);
 });
 
 it('rejects an invalid current password', function (): void {

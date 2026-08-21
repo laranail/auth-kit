@@ -119,6 +119,31 @@ it('does not auto-link by email when provider has not verified it', function ():
     expect($user)->toBeNull();
 });
 
+it('does not create a user when the provider has not verified the email', function (): void {
+    $user = app(ResolveSocialIdentity::class)->execute(
+        provider: SocialProvider::GOOGLE,
+        socialUser: socialiteUser(['email_verified' => false]),
+        guard: 'web',
+    );
+
+    expect($user)->toBeNull()
+        ->and(User::query()->count())->toBe(0)
+        ->and(Social::query()->count())->toBe(0);
+});
+
+it('does not treat a string false verification claim as verified', function (): void {
+    User::factory()->create(['email' => 'john@example.com']);
+
+    $user = app(ResolveSocialIdentity::class)->execute(
+        provider: SocialProvider::GOOGLE,
+        socialUser: socialiteUser(['email_verified' => 'false']),
+        guard: 'web',
+    );
+
+    expect($user)->toBeNull()
+        ->and(Social::query()->count())->toBe(0);
+});
+
 it('does not auto-link when raw user has no verification field', function (): void {
     User::factory()->create(['email' => 'john@example.com']);
 
@@ -152,6 +177,17 @@ it('creates a new user when no match and email is verified', function (): void {
         ->and($user->email)->toBe('john@example.com')
         ->and(Social::query()->count())->toBe(1)
         ->and(Social::first()->provider->value)->toBe('google');
+});
+
+it('normalizes and verifies email addresses trusted from a provider', function (): void {
+    $user = app(ResolveSocialIdentity::class)->execute(
+        provider: SocialProvider::GOOGLE,
+        socialUser: socialiteUser(['email' => 'John@Example.COM']),
+        guard: 'web',
+    );
+
+    expect($user->email)->toBe('john@example.com')
+        ->and($user->email_verified_at)->not->toBeNull();
 });
 
 it('links social account to authenticated user', function (): void {

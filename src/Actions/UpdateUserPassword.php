@@ -24,7 +24,18 @@ class UpdateUserPassword implements UpdatesUserPasswords
         ])->validateWithBag(errorBag: 'updatePassword');
 
         $user->forceFill(attributes: [
-            'password' => Hash::make(value: $input['password']),
+            'password'       => Hash::make(value: $input['password']),
+            'remember_token' => null,
         ])->save();
+
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+
+        $guardInstance = auth()->guard($guard);
+
+        if ($guardInstance->id() === $user->getAuthIdentifier() && method_exists($guardInstance, 'logoutOtherDevices')) {
+            $guardInstance->logoutOtherDevices($input['password']);
+        }
     }
 }

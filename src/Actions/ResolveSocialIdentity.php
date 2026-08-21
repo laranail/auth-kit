@@ -53,7 +53,9 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
             return auth()->user();
         }
 
-        if ($this->emailIsVerified($socialUser) && ($existingUser = $this->findUserByEmail($userModel, $socialUser->getEmail())) !== null) {
+        $email = $this->normalizedVerifiedEmail($socialUser);
+
+        if ($email !== null && ($existingUser = $this->findUserByEmail($userModel, $email)) !== null) {
             $this->createSocialAccount->execute(
                 authenticatable: $existingUser,
                 provider: $provider,
@@ -63,15 +65,11 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
             return $existingUser;
         }
 
-        if ($socialUser->getEmail() === null) {
+        if ($email === null || $this->findUserByEmail($userModel, $email) !== null) {
             return null;
         }
 
-        if ($this->findUserByEmail($userModel, $socialUser->getEmail()) !== null) {
-            return null;
-        }
-
-        $user = $this->createUser($userModel, $socialUser);
+        $user = $this->createUser($userModel, $socialUser, $email);
 
         $this->createSocialAccount->execute(
             authenticatable: $user,
@@ -80,6 +78,17 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
         );
 
         return $user;
+    }
+
+    private function normalizedVerifiedEmail(SocialiteUser $socialUser): ?string
+    {
+        $email = $socialUser->getEmail();
+
+        if ($email === null || ! $this->emailIsVerified($socialUser)) {
+            return null;
+        }
+
+        return Str::lower($email);
     }
 
     private function emailIsVerified(SocialiteUser $socialUser): bool
@@ -92,7 +101,7 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
             return false;
         }
 
-        return (bool) ($rawUser['email_verified'] ?? $rawUser['verified_email'] ?? $rawUser['verified'] ?? false);
+        return filter_var($rawUser['email_verified'] ?? $rawUser['verified_email'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function findUserByEmail(string $userModel, ?string $email): ?Authenticatable
@@ -104,14 +113,15 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
         return $userModel::query()->where('email', $email)->first();
     }
 
-    private function createUser(string $userModel, SocialiteUser $socialUser): Authenticatable
+    private function createUser(string $userModel, SocialiteUser $socialUser, string $email): Authenticatable
     {
         /** @var Model&Authenticatable $user */
         $user = new $userModel();
-        $user->fill([
-            'name'     => $socialUser->getName() ?? $socialUser->getNickname() ?? '',
-            'email'    => $socialUser->getEmail(),
-            'password' => Hash::make(Str::random(32)),
+        $user->forceFill([
+            'name'              => $socialUser->getName() ?? $socialUser->getNickname() ?? '',
+            'email'             => $email,
+            'email_verified_at' => now(),
+            'password'          => Hash::make(Str::random(32)),
         ]);
         $user->save();
 

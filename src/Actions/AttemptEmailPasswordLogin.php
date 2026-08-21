@@ -22,7 +22,6 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
     {
         $email = $request->input('email');
         $password = $request->input('password');
-        $remember = (bool) $request->input('remember', default: false);
         $ip = $request->ip();
 
         $key = 'login:' . $guard . ':' . mb_strtolower(string: $email) . ':' . ($ip ?? '_');
@@ -34,11 +33,10 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
         }
 
         $guardInstance = $this->auth->guard(name: $guard);
-
-        $ok = $guardInstance->attempt(
-            credentials: ['email' => $email, 'password' => $password],
-            remember: $remember,
-        );
+        $provider = $guardInstance->getProvider();
+        $credentials = ['email' => $email, 'password' => $password];
+        $user = $provider->retrieveByCredentials($credentials);
+        $ok = $user !== null && $provider->validateCredentials($user, $credentials);
 
         if (! $ok) {
             $this->limiter->hit(key: $key, decaySeconds: $decaySeconds);
@@ -48,6 +46,6 @@ class AttemptEmailPasswordLogin implements AttemptEmailPasswordLoginInterface
 
         $this->limiter->clear(key: $key);
 
-        return AuthResult::passed(user: $guardInstance->user());
+        return AuthResult::passed(user: $user);
     }
 }
