@@ -21,15 +21,18 @@ function callbackRequest(string $provider): Request
 }
 
 beforeEach(function (): void {
-    $this->socialiteUser = new SocialiteUser();
-    $this->socialiteUser->map([
+    $rawUser = [
         'id'             => '123456789',
         'name'           => 'John Doe',
         'nickname'       => 'johndoe',
         'email'          => 'john@example.com',
         'avatar'         => 'https://example.com/avatar.jpg',
         'email_verified' => true,
-    ]);
+    ];
+
+    $this->socialiteUser = new SocialiteUser();
+    $this->socialiteUser->setRaw($rawUser);
+    $this->socialiteUser->map($rawUser);
     $this->socialiteUser->token = 'mock-token';
     $this->socialiteUser->refreshToken = 'mock-refresh-token';
     $this->socialiteUser->expiresIn = 3600;

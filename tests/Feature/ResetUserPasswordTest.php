@@ -8,7 +8,11 @@ use Illuminate\Validation\ValidationException;
 use Simtabi\Laranail\Auth\Actions\ResetUserPassword;
 
 it('hashes and persists the new password', function (): void {
-    $user = User::factory()->create(['password' => Hash::make('old-password')]);
+    $user = User::factory()->create([
+        'password'       => Hash::make('old-password'),
+        'remember_token' => 'stolen-remember-token',
+    ]);
+    $user->createToken('stolen-token');
 
     app(ResetUserPassword::class)->reset($user, [
         'password'              => 'new-secret',
@@ -16,7 +20,9 @@ it('hashes and persists the new password', function (): void {
     ]);
 
     expect(Hash::check('new-secret', $user->fresh()->password))->toBeTrue()
-        ->and(Hash::check('old-password', $user->password))->toBeFalse();
+        ->and(Hash::check('old-password', $user->password))->toBeFalse()
+        ->and($user->fresh()->remember_token)->toBeNull()
+        ->and($user->fresh()->tokens()->count())->toBe(0);
 });
 
 it('fails validation when password confirmation does not match', function (): void {
