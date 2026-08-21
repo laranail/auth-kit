@@ -23,6 +23,21 @@ php artisan vendor:publish --tag=auth-kit-config
 
 For a ready-made Blade UI, install `laranail/auth-preset` instead.
 
+## Documentation
+
+- [Registration](docs/registration.md)
+- [Login](docs/login.md)
+- [Password reset](docs/password-reset.md)
+- [Profile management](docs/profile-management.md)
+- [Password updates](docs/password-updates.md)
+- [Email verification](docs/email-verification.md)
+- [Social login](docs/social-login.md)
+- [Passkeys](docs/passkeys.md)
+- [API tokens](docs/api-tokens.md)
+- [Configuration](docs/configuration.md)
+- [Security](docs/security.md)
+- [Testing](docs/testing.md)
+
 ## Configuration
 
 `.env`:
