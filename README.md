@@ -64,6 +64,13 @@ return [
 
 Remove `passkeys` from `auth-kit.fortify.features` to disable Fortify's passkey routes. Auth Kit only enables and configures Fortify; passkey ceremonies, responses, and persistence remain provided by Fortify and `laravel/passkeys`.
 
+### Security defaults
+
+- Two-factor authentication is not enabled by default. MFA is still work in progress.
+- Social sign-in only provisions or auto-links accounts when Google, LinkedIn, or PayPal supplies a trusted `email_verified` claim. Facebook and X identities can still be linked by an authenticated user, but cannot establish trust through an email-verification claim.
+- Before production, configure HTTPS, secure session cookies, a working mail transport, and Turnstile keys when bot protection is enabled.
+- PayPal uses sandbox mode by default. Set `AUTH_KIT_PAYPAL_SANDBOX_MODE=false` with production PayPal credentials before enabling it in production.
+
 ## Passkeys
 
 Passkey support uses Fortify's native integration with `laravel/passkeys`. It is stateful and requires the consuming application's authenticatable model to implement Fortify's `PasskeyUser` contract and use Auth Kit's morph-aware `PasskeyAuthenticatable` trait:
@@ -112,22 +119,22 @@ The application client should use Fortify's `/passkeys/login/options`, `/passkey
 
 ## Actions
 
-| Action                      | Purpose                                                        |
-|-----------------------------|----------------------------------------------------------------|
-| `AttemptEmailPasswordLogin` | Verify email + password against a guard, returns `AuthResult`  |
-| `LoginUser`                 | Log user into session + regenerate session                     |
-| `LogoutUser`                | Log out + invalidate session                                   |
-| `CreateNewUser`             | Validate and create user (Fortify `CreatesNewUsers`)           |
-| `ResetUserPassword`         | Validate and reset password (Fortify `ResetsUserPasswords`)    |
+| Action                         | Purpose                                                               |
+|--------------------------------|-----------------------------------------------------------------------|
+| `AttemptEmailPasswordLogin`    | Verify email + password against a guard, returns `AuthResult`         |
+| `LoginUser`                    | Log user into session + regenerate session                            |
+| `LogoutUser`                   | Log out + invalidate session                                          |
+| `CreateNewUser`                | Validate and create user (Fortify `CreatesNewUsers`)                  |
+| `ResetUserPassword`            | Validate and reset password (Fortify `ResetsUserPasswords`)           |
 | `UpdateUserProfileInformation` | Validate and update profile (Fortify `UpdatesUserProfileInformation`) |
-| `UpdateUserPassword`         | Validate and update password (Fortify `UpdatesUserPasswords`)  |
-| `IssueTokenForUser`         | Issue Sanctum personal access token, returns `TokenResult`     |
-| `CheckEmailExists`          | Check if email is registered                                   |
-| `FindUserByEmail`           | Retrieve user by email                                         |
-| `ResolveSocialIdentity`     | Safe social identity → user resolution (verified-email check)  |
-| `SocialRedirectAction`      | Generate OAuth redirect URL, returns `SocialRedirectResult`    |
-| `SocialCallbackAction`      | Handle OAuth callback via `ResolveSocialIdentity`              |
-| `CreateSocialAccountAction` | Create social account record via polymorphic relation          |
+| `UpdateUserPassword`           | Validate and update password (Fortify `UpdatesUserPasswords`)         |
+| `IssueTokenForUser`            | Issue Sanctum personal access token, returns `TokenResult`            |
+| `CheckEmailExists`             | Check if email is registered                                          |
+| `FindUserByEmail`              | Retrieve user by email                                                |
+| `ResolveSocialIdentity`        | Safe social identity → user resolution (verified-email check)         |
+| `SocialRedirectAction`         | Generate OAuth redirect URL, returns `SocialRedirectResult`           |
+| `SocialCallbackAction`         | Handle OAuth callback via `ResolveSocialIdentity`                     |
+| `CreateSocialAccountAction`    | Create social account record via polymorphic relation                 |
 
 ## Result types
 
@@ -164,7 +171,7 @@ Extend these to wire up your own routes. JSON responses are handled automaticall
 | `AbstractLogoutController`                    | `loggedOut()`                         |
 | `AbstractRegisterController`                  | `registered()`                        |
 | `AbstractSocialRedirectController`            | `redirect()`                          |
-| `AbstractSocialCallbackController`            | `passed()`, `failed()`                    |
+| `AbstractSocialCallbackController`            | `passed()`, `failed()`                |
 
 ## Social login
 
