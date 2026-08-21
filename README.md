@@ -2,6 +2,9 @@
 
 Headless authentication for Laravel 13+. No views, routes, or controllers.
 
+> [!WARNING]
+> This package is still in development. Breaking changes are imminent; use it in production at your own risk.
+
 - **Fortify-backed** — password reset, profile updates, password updates, email verification, passkeys, login throttling
 - **Sanctum-ready** — API token issuance via `IssueTokenForUser`
 - **Social login** — Google, Facebook, X, LinkedIn, PayPal via Socialite
