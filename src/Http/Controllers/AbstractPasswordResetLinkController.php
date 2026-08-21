@@ -24,29 +24,21 @@ abstract class AbstractPasswordResetLinkController extends AbstractAuthControlle
             $email = Str::lower($email);
         }
 
-        $status = $this->broker()->sendResetLink(['email' => $email]);
+        $this->broker()->sendResetLink(['email' => $email]);
 
         if ($request->expectsJson()) {
-            return $status === Password::RESET_LINK_SENT
-                ? $this->jsonResponse(status: 'passed', data: ['message' => __($status)])
-                : $this->jsonResponse(status: 'failed', data: ['message' => __($status)], code: 422);
+            return $this->jsonResponse(
+                status: 'passed',
+                data: ['message' => __(Password::RESET_LINK_SENT)],
+            );
         }
 
-        return $status === Password::RESET_LINK_SENT
-            ? $this->sent(request: $request, status: $status)
-            : $this->failed(request: $request, status: $status);
+        return $this->sent(request: $request, status: Password::RESET_LINK_SENT);
     }
 
     protected function sent(Request $request, string $status): mixed
     {
         return back()->with('status', __($status));
-    }
-
-    protected function failed(Request $request, string $status): mixed
-    {
-        return back()
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => __($status)]);
     }
 
     protected function broker(): PasswordBroker

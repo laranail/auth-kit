@@ -53,7 +53,7 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
             return auth()->user();
         }
 
-        $email = $this->normalizedVerifiedEmail($socialUser);
+        $email = $this->normalizedVerifiedEmail($provider, $socialUser);
 
         if ($email !== null && ($existingUser = $this->findUserByEmail($userModel, $email)) !== null) {
             $this->createSocialAccount->execute(
@@ -80,19 +80,23 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
         return $user;
     }
 
-    private function normalizedVerifiedEmail(SocialiteUser $socialUser): ?string
+    private function normalizedVerifiedEmail(SocialProvider $provider, SocialiteUser $socialUser): ?string
     {
         $email = $socialUser->getEmail();
 
-        if ($email === null || ! $this->emailIsVerified($socialUser)) {
+        if ($email === null || ! $this->emailIsVerified($provider, $socialUser)) {
             return null;
         }
 
         return Str::lower($email);
     }
 
-    private function emailIsVerified(SocialiteUser $socialUser): bool
+    private function emailIsVerified(SocialProvider $provider, SocialiteUser $socialUser): bool
     {
+        if (! in_array($provider, [SocialProvider::GOOGLE, SocialProvider::LINKEDIN, SocialProvider::PAYPAL], true)) {
+            return false;
+        }
+
         $rawUser = $socialUser instanceof \Laravel\Socialite\AbstractUser
             ? $socialUser->getRaw()
             : [];
@@ -101,7 +105,7 @@ class ResolveSocialIdentity implements ResolveSocialIdentityInterface
             return false;
         }
 
-        return filter_var($rawUser['email_verified'] ?? $rawUser['verified_email'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        return filter_var($rawUser['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function findUserByEmail(string $userModel, ?string $email): ?Authenticatable

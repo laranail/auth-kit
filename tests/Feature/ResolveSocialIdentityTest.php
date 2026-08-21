@@ -144,6 +144,30 @@ it('does not treat a string false verification claim as verified', function (): 
         ->and(Social::query()->count())->toBe(0);
 });
 
+it('does not trust an email verification claim from Facebook', function (): void {
+    User::factory()->create(['email' => 'john@example.com']);
+
+    $user = app(ResolveSocialIdentity::class)->execute(
+        provider: SocialProvider::FACEBOOK,
+        socialUser: socialiteUser(['email_verified' => true]),
+        guard: 'web',
+    );
+
+    expect($user)->toBeNull()
+        ->and(Social::query()->count())->toBe(0);
+});
+
+it('accepts LinkedIns documented email verification claim', function (): void {
+    $user = app(ResolveSocialIdentity::class)->execute(
+        provider: SocialProvider::LINKEDIN,
+        socialUser: socialiteUser(['email_verified' => 'true']),
+        guard: 'web',
+    );
+
+    expect($user)->not->toBeNull()
+        ->and($user->email)->toBe('john@example.com');
+});
+
 it('does not auto-link when raw user has no verification field', function (): void {
     User::factory()->create(['email' => 'john@example.com']);
 
